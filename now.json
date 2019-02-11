@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "builds": [{ "src": "server.js", "use": "@now/node" }],
+  "regions": ["gru"],
+  "env": {
+    "TELEGRAM_API_KEY": "@telegram-api-key"
+  }
+}
