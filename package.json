@@ -8,6 +8,11 @@
   },
   "author": "Erick Calder <e@arix.com>",
   "license": "ISC",
+  "homepage": "https://github.com/ekkis/telegram-bot-now",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ekkis/telegram-bot-now.git"
+  },
   "dependencies": {
     "micro": "^9.3.3",
     "node-fetch": "^2.3.0"
