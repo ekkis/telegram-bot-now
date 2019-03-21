@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/telegram-bot-now.svg)](//npmjs.com/package/telegram-bot-now)
+
 # Telegram Bot Now 
 
 This project offers a skeleton for easily creating Telegram bots using the Now 
@@ -70,4 +72,4 @@ $ git clone https://github.com/ekkis/telegram-bot-now.git
 
 ## Support
 
-For support, create a ticket here on Github, or reach out to me on Telegram, where I may be found as `@ekkis`
+Create a ticket on Github.  Reach out to me on Telegram.  You'll find me as `@ekkis`
