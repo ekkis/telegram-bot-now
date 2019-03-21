@@ -60,7 +60,7 @@ To see other commands supported by the make utility:
 For a complete description of how to set up routes, create dialogues, the various utilities provided
 in the module, and troubleshooting guidance, please read the Medium article:
 
-https://medium.com/@ekkis/building-a-telegram-bot-in-node-js-now-6daea82ca425 
+[Building a Telegram bot in NodeJs/Now](https://medium.com/@ekkis/building-a-telegram-bot-in-node-js-now-6daea82ca425)
 
 ## Contribute
 
