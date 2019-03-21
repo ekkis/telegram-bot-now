@@ -1,4 +1,4 @@
-[![npm version](https://badge.fury.io/js/telegram-bot-now.svg)](//npmjs.com/package/telegram-bot-now)
+[![npm version](https://badge.fury.io/js/telegram-bot-now.svg)](https://badge.fury.io/js/telegram-bot-now)
 
 # Telegram Bot Now 
 
@@ -60,7 +60,7 @@ To see other commands supported by the make utility:
 For a complete description of how to set up routes, create dialogues, the various utilities provided
 in the module, and troubleshooting guidance, please read the Medium article:
 
-https://medium.com/@ekkis/building-a-telegram-bot-in-node-js-now-6daea82ca425 
+[A Telegram bot in the serverless Now](https://medium.com/@ekkis/building-a-telegram-bot-in-node-js-now-6daea82ca425)
 
 ## Contribute
 
