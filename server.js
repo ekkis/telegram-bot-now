@@ -19,56 +19,55 @@ var dialogues = {};
 const FAIL = "An unexpected error has occurred.  Please report it to the bot /owner";
 
 // server
+module.exports = {
+	utils, server: (routes, opts) => {
+		opts = Object.assign({}, config, opts);
 
-module.exports = (routes, opts) => {
-	opts = Object.assign({}, config, opts);
-
-	// export server functionality to routes + sanitise messages
-
-	if (!routes.MSG || typeof routes.MSG != "object") routes.MSG = {};
-	Object.assign(routes._server, {bot, post, version: pkg.version});
-
-	async function server(req, res) {
-		var js, m;
-		try {
-			js = await json(req); m = msg(js);
-
-			// the route is specified in the request but overridden
-			// by dialogues.  if none specified an 'undefined' route
-			// is expected to be defined in the customer object
-
-			let route = routes[m.cmd || dialogues[m.username]] 
-				|| routes['undefined'];
-			m.text = await route(m, js);
-
-			// conversations can be enabled from within the route by
-			// merely setting the 'dialogue' property to true/false
-
-			if ('dialogue' in m) {
-				if (!m.dialogue) dialogues[m.username] = undefined;
-				else if (m.cmd) dialogues[m.username] = m.cmd;
-			}
-
-			await post(m);
-		} catch(err) {
-			// transmit the error
-			opts.err(err);
-
-			// if a message could be produced, notify the user/group
-			if (m) {
-				try {
-					let s = routes.MSG[err.message] || "";
-					m.text = s || routes.MSG['FAIL'] || FAIL;
-					await post(m);	
-				}
-				catch(e) { opts.err(e); }
-			}	
-		} finally {
-			res.end("ok"); // always return ok
-		}
-	}
+		// export server functionality to routes + sanitise messages
 	
-	return {server, utils};
+		if (!routes.MSG || typeof routes.MSG != "object") routes.MSG = {};
+		Object.assign(routes._server, {bot, post, version: pkg.version});
+
+		return async (req, res) => {
+			var js, m;
+			try {
+				js = await json(req); m = msg(js);
+	
+				// the route is specified in the request but overridden
+				// by dialogues.  if none specified an 'undefined' route
+				// is expected to be defined in the customer object
+	
+				let route = routes[m.cmd || dialogues[m.username]] 
+					|| routes['undefined'];
+				m.text = await route(m, js);
+	
+				// conversations can be enabled from within the route by
+				// merely setting the 'dialogue' property to true/false
+	
+				if ('dialogue' in m) {
+					if (!m.dialogue) dialogues[m.username] = undefined;
+					else if (m.cmd) dialogues[m.username] = m.cmd;
+				}
+	
+				await post(m);
+			} catch(err) {
+				// transmit the error
+				opts.err(err);
+	
+				// if a message could be produced, notify the user/group
+				if (m) {
+					try {
+						let s = routes.MSG[err.message] || "";
+						m.text = s || routes.MSG['FAIL'] || FAIL;
+						await post(m);	
+					}
+					catch(e) { opts.err(e); }
+				}	
+			} finally {
+				res.end("ok"); // always return ok
+			}
+		};
+	}
 };
 
 function msg(js) {

@@ -1,4 +1,4 @@
-const {server, utils} = require('telegram-bot-now');
+const bot = require('telegram-bot-now');
 
 var self = {
 	start: function(msg) {
@@ -10,13 +10,15 @@ var self = {
 	},
 
 	ping: () => {
-		// to check the server's alive
+		// to check that the server is alive
 
 		console.log('* ping');
 		return 'pong!';
 	},
 
 	hello: (m) => {
+		// an example of a greeting
+
 		m.reply({ text: 'Hi there, ' + m.username });
 	},
 
@@ -30,7 +32,7 @@ var self = {
 	help: () => {
 		// this message
 
-		return utils.help(self);
+		return bot.utils.help(self);
 	},
 
 	MSG: {
@@ -45,4 +47,4 @@ var self = {
 	}
 }
 
-module.exports = server(self);
+module.exports = bot.server(self);
