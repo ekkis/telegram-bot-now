@@ -1,4 +1,4 @@
-[![npm version](https://badge.fury.io/js/telegram-bot-now.svg)](//npmjs.com/package/telegram-bot-now)
+[![npm version](https://badge.fury.io/js/telegram-bot-now.svg)](https://badge.fury.io/js/telegram-bot-now)
 
 # Telegram Bot Now 
 
