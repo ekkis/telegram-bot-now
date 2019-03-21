@@ -53,6 +53,7 @@ module.exports = {
 				await send(m);
 			} catch(err) {
 				// transmit the error
+				opts.err("-- telegram-bot-now::server() general catch --");
 				opts.err(err);
 	
 				// if a message could be produced, notify the user/group
@@ -62,7 +63,10 @@ module.exports = {
 						m.text = s || routes.MSG['FAIL'] || FAIL;
 						await send(m);	
 					}
-					catch(e) { opts.err(e); }
+					catch(e) {
+						opts.err("-- telegram-bot-now::send() send within catch fail --");
+						opts.err(e); 
+					}
 				}	
 			} finally {
 				res.end("ok"); // always return ok
@@ -88,7 +92,7 @@ function msg(js) {
 		method: 'sendMessage',
 		cmd, args,
 		reply(o) {
-			if (!o) throw new Error('server.js:msg(): No reply specified');
+			if (!o) throw new Error('telegram-bot-now::msg(): No reply specified');
 			var m = Object.assign({}, this);
 			if (typeof o == 'string') m.text = o;
 			else m = Object.assign(m, o);
@@ -120,8 +124,8 @@ function send(msg) {
 		.then(res => res.json())
 		.then(res => {
 			if (res.ok) return;
-			console.log("FETCH RETURN FAIL");
-			console.dir(json, {depth:null});
+			console.log("-- telegram-bot-now::send() fetch fail --");
+			console.dir(res, {depth:null});
 		});
 
 		if (msg.DEBUG)

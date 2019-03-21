@@ -46,6 +46,10 @@ help() {
 
 	   # mk msg - "/ping" 2034492 "JohnDoe"
 
+	If you want to message Telegram directly:
+
+		# mk msg -t "/ping" 2034492 "JohnDoe"
+
 	To set a secret with credentials for your database:
 
 	   # mk secret "DATABASE_AUTH" "JohnDoe:SomePassword"
@@ -67,15 +71,12 @@ logs() {
 
 msg() {
 	cmd=$1; shift
-	[ "$cmd" == "-" ] && { srv="-"; cmd=$1; shift; }
+	[[ "$cmd" == -* ]] && { srv=$cmd; cmd=$1; shift; }
 	chat_id=$1; shift
 	from=$1; shift
 
-	chat=$(printf '"chat": {"id": "%s", "type": "private"}' $chat_id)
-	from=$(printf '"from": {"username": "%s"}' $from)
-	d=$(printf '{"message": {"text": "%s", %s, %s}}' $cmd "$chat" "$from")
-	curl -d "$d" "$(hdr -j)" "$(url $srv)"
-	echo ""
+	d=$(printf "'$(msg_data $srv)'" $chat_id $from "$cmd")
+	tg sendMessage -d "$d" $(hdr -j)
 }
 
 bind() {
@@ -87,8 +88,8 @@ bind() {
 	}
 
 	d='{"url": "%s", "allowed_updates": ["message", "channel_post"]}'
-	d=$(printf "$d" "$(cat .url)/server.js")
-	tg setWebhook -d "'$d'" "$(hdr -j)"
+	d=$(printf "'$d'" "$(cat .url)/server.js")
+	tg setWebhook -d "$d" $(hdr -j)
 }
 
 clearqueue() {
@@ -121,20 +122,20 @@ example() {
 # --- support functionatlity --------------------------------------------------
 
 url() {
-	[ $1 == "" ] && {
+	[ "$1" == "" ] && {
 		echo "$(cat .url)/server.js"
 	}
-	[ $1 == "-" ] && {
+	[ "$1" == "-" ] && {
 		echo "http://localhost:3000/server.js"
 	}
-	[ $1 == "-t" ] && {
+	[ "$1" == "-t" ] && {
 		echo "https://api.telegram.org/bot${TELEGRAM_API_KEY}"
 	}
 }
 
 hdr() {
 	[[ "$1" == "-j" ]] && {
-		echo '-H "Content-Type: application/json"'
+		echo -H "Content-Type:application/json"
 	}
 }
 
@@ -146,6 +147,13 @@ tg() {
 	}
 	eval $cmd
 	echo ""
+}
+
+msg_data() {
+    toT='{"chat_id": "%s", "chat_type": "private", "username": "%s", "parse_mode": "Markdown", "text": "%s"}'
+    frT='{"message": {"chat": {"id": "%s", "type": "private"}, "from": {"username": "%s"}, "text": "%s"}'
+    
+    [ "$1" == "-t" ] && echo $toT || echo $frT
 }
 
 # --- main() ------------------------------------------------------------------
