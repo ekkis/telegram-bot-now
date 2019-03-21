@@ -1,31 +1,131 @@
 const {json, send} = require('micro');
 const fetch = require('node-fetch');
-const routes = require('./routes');
+const pkg = require('./package.json');
+const utils = require('./utils');
 
-const bot_url = "https://api.telegram.org/bot" + process.env.TELEGRAM_API_KEY;
+var config = {
+	err: console.log
+};
 
-module.exports = async (req, res) => {
-	try {
-		let msg = (await json(req)).message;
-		let m = msg.text.match(/\/?([^\s]*)/);
-		let s = await (routes[m[1]] || routes["wrong"])(msg);
-		if (typeof s === 'string') msg.text = s;
-		await post(msg);
-		res.end("ok");
-	} catch(err) {
-		send(res, 500, {error: "Error: " + err});
+// ensure we have Telegram account
+
+const API_KEY = process.env.TELEGRAM_API_KEY; 
+if (!API_KEY) throw new Error("No Telegram API key");
+const bot = "https://api.telegram.org/bot" + API_KEY;
+
+// local state
+
+var dialogues = {};
+const FAIL = "An unexpected error has occurred.  Please report it to the bot /owner";
+
+// server
+
+module.exports = (routes, opts) => {
+	opts = Object.assign({}, config, opts);
+
+	// export server functionality to routes + sanitise messages
+
+	if (!routes.MSG || typeof routes.MSG != "object") routes.MSG = {};
+	Object.assign(routes._server, {bot, post, version: pkg.version});
+
+	async function server(req, res) {
+		var js, m;
+		try {
+			js = await json(req); m = msg(js);
+
+			// the route is specified in the request but overridden
+			// by dialogues.  if none specified an 'undefined' route
+			// is expected to be defined in the customer object
+
+			let route = routes[m.cmd || dialogues[m.username]] 
+				|| routes['undefined'];
+			m.text = await route(m, js);
+
+			// conversations can be enabled from within the route by
+			// merely setting the 'dialogue' property to true/false
+
+			if ('dialogue' in m) {
+				if (!m.dialogue) dialogues[m.username] = undefined;
+				else if (m.cmd) dialogues[m.username] = m.cmd;
+			}
+
+			await post(m);
+		} catch(err) {
+			// transmit the error
+			opts.err(err);
+
+			// if a message could be produced, notify the user/group
+			if (m) {
+				try {
+					let s = routes.MSG[err.message] || "";
+					m.text = s || routes.MSG['FAIL'] || FAIL;
+					await post(m);	
+				}
+				catch(e) { opts.err(e); }
+			}	
+		} finally {
+			res.end("ok"); // always return ok
+		}
 	}
-}
+	
+	return {server, utils};
+};
 
-async function post(msg) {
-	var o = {
-		chat_id: msg.chat.id, text: msg.text,
-		reply_to_message_id: msg.message_id,
-		parse_mode: 'Markdown'
+function msg(js) {
+	var m = js.message;
+	var [args, cmd] = m.reply_to_message 
+		? [m.reply_to_message.text]
+		: [m.text];
+		
+	if (args.startsWith('/')) {
+		let x; [x, cmd, args] = args.match(/^\/(\w+)(?:\s+(.*))?/);
+	}
+	var ret = {
+		chat_id: m.chat.id,
+		chat_type: m.chat.type,
+		username: m.from.username,
+		parse_mode: 'Markdown',
+		method: 'sendMessage',
+		cmd, args,
+		reply(o) {
+			if (!o) throw new Error('server.js:msg(): No reply specified');
+			var m = Object.assign({}, this);
+			if (typeof o == 'string') m.text = o;
+			else m = Object.assign(m, o);
+			return post(m);
+		}
 	};
-	return fetch(bot_url + "/sendMessage", {
-		method: 'post',
-		body: JSON.stringify(o),
-		headers: {'Content-Type': 'application/json'}
-	});
+
+	if (m.chat.type == 'group')
+		ret.reply_to_message_id = m.message_id;
+
+	return ret;
+}
+	
+function post(msg) {
+	if (!msg) msg = this;
+	if (!msg.text) return;
+	if (!msg.parse_mode) msg.parse_mode = 'Markdown';
+	
+	var ret = Promise.resolve(true);
+	var msgs = (typeof msg.text == 'string') ? [msg.text] : msg.text;
+	msgs = msgs.map(s => s.split(/^\s*---/m)).flat();
+	for (var i = 0; i < msgs.length; i++) {
+		msg.text = msgs[i].trimln();
+		ret = ret.then(fetch(bot + '/' + msg.method, {
+			method: 'post',
+			body: JSON.stringify(msg),
+			headers: {'Content-Type': 'application/json'}
+		}))
+		.then(res => res.json())
+		.then(res => {
+			if (res.ok) return;
+			console.log("FETCH RETURN FAIL");
+			console.dir(json, {depth:null});
+		});
+
+		if (routes.DEBUG)
+			console.log("REPLY: " + JSON.stringify(msg));
+	}
+	return ret;
 }

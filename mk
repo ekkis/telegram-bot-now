@@ -2,100 +2,166 @@
 
 #
 #	Synopsis
-#		This is a small collection of tools to help manage and test `now` deployments
+#	   This is a small collection of tools to help manage and
+#      test `now` deployments
 #	Author
-#		Erick Calder <e@arix.com>
+#      Erick Calder <e@arix.com>
 #	Notes
-#		For information on usage please refer to the Medium article:
-#		https://medium.com/@ekkis/building-a-telegram-bot-in-node-js-now-6daea82ca425
+#      For information on usage please refer to the Medium article:
+#      https://medium.com/@ekkis/building-a-telegram-bot-in-node-js-now-6daea82ca425
 #
 
+help() {
+	cat <<- "EOF"
+	mk [command]
+
+	where <command> may be:
+
+	   logs - shows deployment logs for your project
+	   msg [-] <command> <chat_id> <from> - sends a message to your server
+	   bind - binds your server to the Telegram bot using web hooks
+	   bind info - shows binding information
+	   bind rm - removes the existing binding
+	   clearqueue - useful to wipe out messages stuck in the queue
+	   secret <telegram-api-key> - installs your Telegram API key
+	   secret <key> <value> - installs other secrets
+
+	To see the actual stattements issued by this script when running
+	a command prefix the command with -d:
+
+	   # mk -d bind
+
+	To build a deployment just run this script without arguments:
+
+	   # mk
+
+	-- examples --
+
+	To ping your server:
+
+	   # mk msg "/ping" 2034492 "JohnDoe"
+
+	When running the server locally with `npm start`, you can send messages
+	like this:
+
+	   # mk msg - "/ping" 2034492 "JohnDoe"
+
+	To set a secret with credentials for your database:
+
+	   # mk secret "DATABASE_AUTH" "JohnDoe:SomePassword"
+	EOF
+	exit 0
+}
+
 logs() {
-	now logs -f $(cat .url)
+	msg="Cannot show logs.  No deployment has been made"
+	[ ! -f .url ] && {
+		echo $msg; exit 0
+	}
+	url=$(cat .url)
+	[ -z "$url" ] && {
+		echo $msg; exit 0
+	}
+	now logs -f $url
 }
 
-url() {
-	host=${1/-/http://localhost:3000}
-	echo "${host:-$(cat .url)}/index.js"
-}
+msg() {
+	cmd=$1; shift
+	[ "$cmd" == "-" ] && { srv="-"; cmd=$1; shift; }
+	chat_id=$1; shift
+	from=$1; shift
 
-get() {
-	curl "$(url $1)/?name=ekkis&id=3"
-	echo ""
-}
-	
-post_url() {
-	curl -d 's=ekkis&id=3' $(url $1)
-	echo ""
-}
-
-post() {
-	s='{"message": {"text": "%s", "chat": {"id": "1"}}}'
-	s=$(printf "$s" ${1:-ekkis})
-	curl -v -d "$s" -H "Content-Type: application/json" $(url $2)
-	echo ""
-}
-
-reply() {
-	key=$(cat .env |sed 's/.*=//')
-	url="https://api.telegram.org/bot${key}/sendMessage";
-	s='{"chat_id": "%d", "text": "wow"}'
-	s=$(printf "$s" $1)
-	curl -v -d "$s" -H "Content-Type: application/json" $url
+	chat=$(printf '"chat": {"id": "%s", "type": "private"}' $chat_id)
+	from=$(printf '"from": {"username": "%s"}' $from)
+	d=$(printf '{"message": {"text": "%s", %s, %s}}' $cmd $chat $from)
+	curl -d "$d" $(hdr -j) $(url $srv)
 	echo ""
 }
 
 bind() {
 	[ "$1" == "rm" ] && {
-		tsend deleteWebhook
-		exit
+		tg deleteWebhook; exit
 	}
 	[ "$1" == "info" ] && {
-		tsend getWebhookInfo
-		exit
+		tg getWebhookInfo; exit
 	}
 
-	key=$(cat .env |sed 's/.*=//')
 	url="$(cat .url)/server.js"
-	webhook="https://api.telegram.org/bot${key}/setWebhook"
-	js='{"url": "%s", "allowed_updates": ['message', 'channel_post']}';
-	curl -d "$(printf "$js" $url)" -H "Content-Type: application/json" $webhook
-	echo ""
-}
-
-tsend() {
-	cmd="curl"
-	key=$(cat .env |sed 's/.*=//')
-	[ ! -z "$2" ] && {
-		cmd="$cmd -F $2"
-	}
-	cmd="$cmd https://api.telegram.org/bot${key}/$1"
-	$cmd
-	echo ""
+	d='{"url": "%s", "allowed_updates": ["message", "channel_post"]}'
+	d=$(printf "$d" $url)
+	tg setWebhook $(printf '-d "%s" %s' $d $(hdr -j))
 }
 
 clearqueue() {
-	tsend deleteWebhook
-	id=$(tsend getUpdates |jq .result[0].update_id)
-	tsend getUpdates offset=$id
+	tg deleteWebhook
+	id=$(tg getUpdates 2>/dev/null |jq .result[-1].update_id)
+	id=$(echo "$id+1" |bc)
+	tg getUpdates "-F 'offset=$id'"
 	bind
 }
 
 secret() {
-	now secret add telegram-api-key "$1"
+	key=${1:-"telegram-api-key"}
+	val=${2:-$1}
+	now secret add "$key" "$val"
+	[ $? -eq 0 ] && {
+		key=$(echo $key| sed 's/-/_/g' |awk '{print toupper($0)}')
+		echo "export $key=$val" 
+	}
 }
 
-	
-[ "$1" == "-d" ] && {
-	shift
-	set -x
+example() {
+	d=node_modules/telegram-bot-now/examples
+	cp $d/server.js . > /dev/null
+	cp $d/now.json . > /dev/null
+	echo "The following files have been created in your project root:"
+	echo " - server.js"
+	echo " - now.json"
 }
-[ ! -z "$1" ] && {
-	$@
+
+# --- support functionatlity --------------------------------------------------
+
+url() {
+	[ $1 == "" ] && {
+		echo "$(cat .url)/server.js"
+	}
+	[ $1 == "-" ] && {
+		echo "http://localhost:3000/server.js"
+	}
+	[ $1 == "-t" ] && {
+		echo "https://api.telegram.org/bot${TELEGRAM_API_KEY}"
+	}
+}
+
+hdr() {
+	[[ "$1" == "-j" ]] && {
+		echo '-H "Content-Type: application/json"'
+	}
+}
+
+tg() {
+	cmd=$1; shift
+	curl $1 "$(url -t)/$cmd"
+	echo ""
+}
+
+# --- main() ------------------------------------------------------------------
+
+[ "$1" == "-d" ] && {
+	shift; set -x
+}
+[ "$1" == "--help" ] && {
+	help
+}
+[ -z "$TELEGRAM_API_KEY" ] && {
+	echo "Telegram API not set.  Please set the value in your local environment with:"
+	echo "export TELEGRAM_API_KEY=xxxxxxxx"
 	exit 0
 }
+[ ! -z "$1" ] && {
+	"$@"; exit 0
+}
 
-now
-url=$(pbpaste)
-echo $url > .url
+[ -f .url ] && now rm --yes $(cat .url)
+now > .url
 bind

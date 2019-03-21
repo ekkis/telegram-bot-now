@@ -4,8 +4,7 @@
   "description": "A NodeJs-based Telegram bot for the Now serverless platform",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "micro"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Erick Calder <e@arix.com>",
   "license": "ISC",
