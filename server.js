@@ -1,4 +1,4 @@
-const {json, send} = require('micro');
+const {json} = require('micro');
 const fetch = require('node-fetch');
 const pkg = require('./package.json');
 const utils = require('./utils');
@@ -26,7 +26,7 @@ module.exports = {
 		// export server functionality to routes + sanitise messages
 	
 		if (!routes.MSG || typeof routes.MSG != "object") routes.MSG = {};
-		Object.assign(routes._server, {bot, post, version: pkg.version});
+		Object.assign(routes._server, {bot, send, version: pkg.version});
 
 		return async (req, res) => {
 			var js, m;
@@ -49,7 +49,8 @@ module.exports = {
 					else if (m.cmd) dialogues[m.username] = m.cmd;
 				}
 	
-				await post(m);
+				m.DEBUG = routes.DEBUG;
+				await send(m);
 			} catch(err) {
 				// transmit the error
 				opts.err(err);
@@ -59,7 +60,7 @@ module.exports = {
 					try {
 						let s = routes.MSG[err.message] || "";
 						m.text = s || routes.MSG['FAIL'] || FAIL;
-						await post(m);	
+						await send(m);	
 					}
 					catch(e) { opts.err(e); }
 				}	
@@ -91,7 +92,7 @@ function msg(js) {
 			var m = Object.assign({}, this);
 			if (typeof o == 'string') m.text = o;
 			else m = Object.assign(m, o);
-			return post(m);
+			return send(m);
 		}
 	};
 
@@ -101,7 +102,7 @@ function msg(js) {
 	return ret;
 }
 	
-function post(msg) {
+function send(msg) {
 	if (!msg) msg = this;
 	if (!msg.text) return;
 	if (!msg.parse_mode) msg.parse_mode = 'Markdown';
@@ -111,7 +112,7 @@ function post(msg) {
 	msgs = msgs.map(s => s.split(/^\s*---/m)).flat();
 	for (var i = 0; i < msgs.length; i++) {
 		msg.text = msgs[i].trimln();
-		ret = ret.then(fetch(bot + '/' + msg.method, {
+		ret = ret.then(() => fetch(bot + '/' + msg.method, {
 			method: 'post',
 			body: JSON.stringify(msg),
 			headers: {'Content-Type': 'application/json'}
@@ -123,7 +124,7 @@ function post(msg) {
 			console.dir(json, {depth:null});
 		});
 
-		if (routes.DEBUG)
+		if (msg.DEBUG)
 			console.log("REPLY: " + JSON.stringify(msg));
 	}
 	return ret;
