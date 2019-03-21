@@ -86,10 +86,9 @@ bind() {
 		tg getWebhookInfo; exit
 	}
 
-	url="$(cat .url)/server.js"
 	d='{"url": "%s", "allowed_updates": ["message", "channel_post"]}'
-	d=$(printf "$d" $url)
-	tg setWebhook $(printf '-d "%s" %s' $d $(hdr -j))
+	d=$(printf "$d" "$(cat .url)/server.js")
+	tg setWebhook -d "'$d'" "$(hdr -j)"
 }
 
 clearqueue() {
@@ -141,14 +140,18 @@ hdr() {
 
 tg() {
 	cmd=$1; shift
-	curl $1 "$(url -t)/$cmd"
+	cmd="curl $@ $(url -t)/$cmd"
+	[ "$DEBUG" == "Y" ] && {
+		echo $cmd
+	}
+	eval $cmd
 	echo ""
 }
 
 # --- main() ------------------------------------------------------------------
 
 [ "$1" == "-d" ] && {
-	shift; set -x
+	shift; DEBUG=Y; set -x
 }
 [ "$1" == "--help" ] && {
 	help
