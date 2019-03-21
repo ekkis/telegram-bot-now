@@ -72,4 +72,4 @@ $ git clone https://github.com/ekkis/telegram-bot-now.git
 
 ## Support
 
-Create a ticket on Github.  Reach out to me on Telegram.  You'll find me as @ekkis
+Create a ticket on Github.  Reach out to me on Telegram.  You'll find me as [@ekkis](https://t.me/ekkis)
