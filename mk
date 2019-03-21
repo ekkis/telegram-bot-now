@@ -73,8 +73,8 @@ msg() {
 
 	chat=$(printf '"chat": {"id": "%s", "type": "private"}' $chat_id)
 	from=$(printf '"from": {"username": "%s"}' $from)
-	d=$(printf '{"message": {"text": "%s", %s, %s}}' $cmd $chat $from)
-	curl -d "$d" $(hdr -j) $(url $srv)
+	d=$(printf '{"message": {"text": "%s", %s, %s}}' $cmd "$chat" "$from")
+	curl -d "$d" "$(hdr -j)" "$(url $srv)"
 	echo ""
 }
 
