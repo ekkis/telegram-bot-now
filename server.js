@@ -90,7 +90,7 @@ function msg(js) {
 		username: m.from.username,
 		parse_mode: 'Markdown',
 		method: 'sendMessage',
-		cmd, args,
+		cmd, args: args || '',
 		reply(o) {
 			if (!o) throw new Error('-- telegram-bot-now::msg(): No reply specified --');
 			var m = Object.assign({}, this);
