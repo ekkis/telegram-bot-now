@@ -32,7 +32,7 @@ String.prototype.sprintf = function(o) {
 
 String.prototype.trimln = function(s) {
 	return this.trim()
-		.replace(/^\s*/gm, '')
+		.replace(/^[ \t]*/gm, '')
 		.replace(/([^\n])\n/g, '$1 ');
 };
 
