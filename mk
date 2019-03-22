@@ -70,39 +70,41 @@ logs() {
 }
 
 msg() {
-	cmd=$1; shift
-	[[ "$cmd" == -* ]] && { srv=$cmd; cmd=$1; shift; }
-	chat_id=$1; shift
-	from=$1; shift
-
+	srv=$1; cmd=$2; chat_id=$3; from=$4
 	d=$(printf "'$(msg_data $srv)'" $chat_id $from "$cmd")
-	tg sendMessage -d "$d" $(hdr -j)
+	if [ "$srv" == "-t" ]; then
+		fetch sendMessage $srv -d "$d" $(hdr -j)
+	else
+		fetch $srv -d "$d" $(hdr -j)
+	fi
 }
 
 bind() {
 	[ "$1" == "rm" ] && {
-		tg deleteWebhook; exit
+		fetch deleteWebhook -t; exit
 	}
 	[ "$1" == "info" ] && {
-		tg getWebhookInfo; exit
+		fetch getWebhookInfo -t; exit
 	}
 
 	d='{"url": "%s", "allowed_updates": ["message", "channel_post"]}'
 	d=$(printf "'$d'" "$(cat .url)/server.js")
-	tg setWebhook -d "$d" $(hdr -j)
+	fetch setWebhook -t -d "$d" $(hdr -j)
 }
 
 clearqueue() {
-	tg deleteWebhook
-	id=$(tg getUpdates 2>/dev/null |jq .result[-1].update_id)
+	fetch deleteWebhook
+	id=$(fetch getUpdates -t 2>/dev/null |jq .result[-1].update_id)
 	id=$(echo "$id+1" |bc)
-	tg getUpdates "-F 'offset=$id'"
+	fetch getUpdates -t "-F 'offset=$id'"
 	bind
 }
 
 secret() {
-	key=${1:-"telegram-api-key"}
-	val=${2:-$1}
+	key=$1; val=$2
+	(( $# == 1 )) && {
+		key="telegram-api-key"; val=$1
+	}   
 	now secret add "$key" "$val"
 	[ $? -eq 0 ] && {
 		key=$(echo $key| sed 's/-/_/g' |awk '{print toupper($0)}')
@@ -122,10 +124,10 @@ example() {
 # --- support functionatlity --------------------------------------------------
 
 url() {
-	[ "$1" == "" ] && {
+	[ "$1" == "-b" ] && {
 		echo "$(cat .url)/server.js"
 	}
-	[ "$1" == "-" ] && {
+	[ "$1" == "-l" ] && {
 		echo "http://localhost:3000/server.js"
 	}
 	[ "$1" == "-t" ] && {
@@ -139,9 +141,12 @@ hdr() {
 	}
 }
 
-tg() {
-	cmd=$1; shift
-	cmd="curl $@ $(url -t)/$cmd"
+fetch() {
+	srv=$1; cmd=""; shift
+	[[ "$srv" != -* ]] && {
+		cmd=$srv; srv=$1; shift
+	}
+	cmd="curl $@ $(url $srv)/$cmd"
 	[ "$DEBUG" == "Y" ] && {
 		echo $cmd
 	}
@@ -150,8 +155,25 @@ tg() {
 }
 
 msg_data() {
-    toT='{"chat_id": "%s", "chat_type": "private", "username": "%s", "parse_mode": "Markdown", "text": "%s"}'
-    frT='{"message": {"chat": {"id": "%s", "type": "private"}, "from": {"username": "%s"}, "text": "%s"}'
+    toT=$(cat <<- EOF
+	{
+		"chat_id": "%s",
+		"chat_type": "private",
+		"username": "%s",
+		"parse_mode": "Markdown",
+		"text": "%s"
+	}
+	EOF)
+
+	frT=$(cat <<- EOF
+	{
+		"message": {
+			"chat": {"id": "%s", "type": "private"},
+			"from": {"username": "%s"},
+			"text": "%s"
+		}
+	}
+	EOF)
     
     [ "$1" == "-t" ] && echo $toT || echo $frT
 }
