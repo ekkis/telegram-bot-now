@@ -125,7 +125,7 @@ function send(msg) {
 			if (res.ok) return;
 			console.log("-- telegram-bot-now::send() fetch fail --");
 			console.dir(res, {depth:null});
-			console.dir(reply, {depth:null});
+			console.dir(msg, {depth:null});
 		});
 
 		if (msg.DEBUG)
