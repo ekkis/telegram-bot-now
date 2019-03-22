@@ -92,7 +92,7 @@ function msg(js) {
 		method: 'sendMessage',
 		cmd, args,
 		reply(o) {
-			if (!o) throw new Error('telegram-bot-now::msg(): No reply specified');
+			if (!o) throw new Error('-- telegram-bot-now::msg(): No reply specified --');
 			var m = Object.assign({}, this);
 			if (typeof o == 'string') m.text = o;
 			else m = Object.assign(m, o);
@@ -109,7 +109,6 @@ function msg(js) {
 function send(msg) {
 	if (!msg) msg = this;
 	if (!msg.text) return;
-	if (!msg.parse_mode) msg.parse_mode = 'Markdown';
 	
 	var ret = Promise.resolve(true);
 	var msgs = (typeof msg.text == 'string') ? [msg.text] : msg.text;
@@ -118,14 +117,15 @@ function send(msg) {
 		msg.text = msgs[i].trimln();
 		ret = ret.then(() => fetch(bot + '/' + msg.method, {
 			method: 'post',
-			body: JSON.stringify(msg),
-			headers: {'Content-Type': 'application/json'}
+			headers: {'Content-Type': 'application/json'},
+			body: JSON.stringify(msg)
 		}))
 		.then(res => res.json())
 		.then(res => {
 			if (res.ok) return;
 			console.log("-- telegram-bot-now::send() fetch fail --");
 			console.dir(res, {depth:null});
+			console.dir(reply, {depth:null});
 		});
 
 		if (msg.DEBUG)
