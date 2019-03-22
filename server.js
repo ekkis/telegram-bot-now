@@ -114,22 +114,25 @@ function send(msg) {
 	var msgs = (typeof msg.text == 'string') ? [msg.text] : msg.text;
 	msgs = msgs.map(s => s.split(/^\s*---/m)).flat();
 	for (var i = 0; i < msgs.length; i++) {
-		msg.text = msgs[i].trimln();
-		ret = ret.then(() => fetch(bot + '/' + msg.method, {
+		ret = post(ret, Object.assign({}, msg, {text: msgs[i].trimln()}));
+	}
+	return ret;
+
+	function post(p, msg) {
+		return p.then(() => fetch(bot + '/' + msg.method, {
 			method: 'post',
 			headers: {'Content-Type': 'application/json'},
 			body: JSON.stringify(msg)
 		}))
 		.then(res => res.json())
 		.then(res => {
-			if (res.ok) return;
-			console.log("-- telegram-bot-now::send() fetch fail --");
-			console.dir(res, {depth:null});
-			console.dir(msg, {depth:null});
+			if (msg.DEBUG)
+				console.log("REPLY: " + JSON.stringify(msg));
+			if (!res.ok) {
+				console.log("-- telegram-bot-now::send() fetch fail --");
+				console.dir(res, {depth:null});
+				console.dir(msg, {depth:null});
+			}
 		});
-
-		if (msg.DEBUG)
-			console.log("REPLY: " + JSON.stringify(msg));
 	}
-	return ret;
 }
