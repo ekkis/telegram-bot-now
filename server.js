@@ -18,7 +18,10 @@ const bot = "https://api.telegram.org/bot" + API_KEY;
 var dialogues = {};
 const FAIL = "An unexpected error has occurred.  Please report it to the bot /owner";
 
-// server
+// pass send mechanism to client
+
+utils.send = send;
+
 module.exports = {
 	utils, server: (routes, opts) => {
 		opts = Object.assign({}, config, opts);
