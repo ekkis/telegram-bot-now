@@ -1,12 +1,13 @@
 {
   "name": "telegram-bot-now",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "A NodeJs-based Telegram bot for the Now serverless platform",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Erick Calder <e@arix.com>",
+  "keywords": ["telegram", "bot", "now"],
   "license": "ISC",
   "homepage": "https://github.com/ekkis/telegram-bot-now",
   "repository": {

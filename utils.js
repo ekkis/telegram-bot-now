@@ -111,7 +111,7 @@ module.exports = {
                 }
             }
         }
-        ret = ret.join('\n');
+        ret = ret.join('\n\n\n');
         if (s) ret = s.sprintf({help: ret});
         return ret.trimln();
     }
