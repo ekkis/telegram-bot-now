@@ -33,7 +33,14 @@ var self = module.exports = {
 		return async (req, res) => {
 			var js, m;
 			try {
-				js = await json(req); m = msg(js);
+				if (req.method == 'GET') {
+					js = m = utils.url(req.url);
+				}
+				else if (req.method == 'POST') {
+					js = await json(req); m = msg(js);
+				}
+				else throw new Error('Unsupported method [' + req.method + ']');
+
 				if (self.DEBUG) console.log('INPUT MSG', JSON.stringify(js));
 	
 				// the route is specified in the request but overridden

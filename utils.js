@@ -114,5 +114,13 @@ module.exports = {
         ret = ret.join('\n\n\n');
         if (s) ret = s.sprintf({help: ret});
         return ret.trimln();
+    },
+    url: (s) => {
+        var ret = {}; 
+        var r = s.replace(/.*\?/, '').split(/[&=]/);
+        for (var i = 0; i < r.length; i += 2) {
+            ret[r[i]] = r[i+1];
+        }   
+        return ret;
     }
 }
