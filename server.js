@@ -18,18 +18,17 @@ const bot = "https://api.telegram.org/bot" + API_KEY;
 var dialogues = {};
 const FAIL = "An unexpected error has occurred.  Please report it to the bot /owner";
 
-// pass send mechanism to client
-
-utils.send = send;
+// useful to client
+utils.msg = send;
 
 var self = module.exports = {
-	utils, server: (routes, opts) => {
+	version: pkg.version, 
+	utils, 
+	server: (routes, opts) => {
 		opts = Object.assign({}, config, opts);
 
-		// export server functionality to routes + sanitise messages
-	
+		// sanitise messages
 		if (!routes.MSG || typeof routes.MSG != "object") routes.MSG = {};
-		Object.assign(routes._server, {bot, send, version: pkg.version});
 
 		return async (req, res) => {
 			var js, m;
