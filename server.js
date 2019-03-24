@@ -22,7 +22,7 @@ const FAIL = "An unexpected error has occurred.  Please report it to the bot /ow
 
 utils.send = send;
 
-module.exports = {
+var self = module.exports = {
 	utils, server: (routes, opts) => {
 		opts = Object.assign({}, config, opts);
 
@@ -35,6 +35,7 @@ module.exports = {
 			var js, m;
 			try {
 				js = await json(req); m = msg(js);
+				if (self.DEBUG) console.log('INPUT MSG', JSON.stringify(js));
 	
 				// the route is specified in the request but overridden
 				// by dialogues.  if none specified an 'undefined' route
@@ -52,7 +53,6 @@ module.exports = {
 					else if (m.cmd) dialogues[m.username] = m.cmd;
 				}
 	
-				m.DEBUG = routes.DEBUG;
 				await send(m);
 			} catch(err) {
 				// transmit the error
@@ -129,8 +129,8 @@ function send(msg) {
 		}))
 		.then(res => res.json())
 		.then(res => {
-			if (msg.DEBUG)
-				console.log("REPLY: " + JSON.stringify(msg));
+			if (self.DEBUG)
+				console.log('OUTPUT MSG', JSON.stringify(msg));
 			if (!res.ok) {
 				console.log("-- telegram-bot-now::send() fetch fail --");
 				console.dir(res, {depth:null});
