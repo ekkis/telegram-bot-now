@@ -16,6 +16,10 @@ Array.prototype.unique = function() {
     return this.filter((e, pos) => this.indexOf(e) == pos);
 }
 
+Array.prototype.trim = function() {
+    return this.map(s => typeof s == 'string' ? s.trim() : s);
+}
+
 if (!Array.prototype.flat) // polyfill for older versions of NodeJs that don't support this
 	Array.prototype.flat = function() {
 		var r = (ret, v) => ret.concat(Array.isArray(v) ? v.flat() : v);

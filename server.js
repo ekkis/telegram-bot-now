@@ -22,7 +22,9 @@ const FAIL = "An unexpected error has occurred.  Please report it to the bot /ow
 utils.msg = send;
 
 var self = module.exports = {
-	version: pkg.version, 
+	info: {
+		version: pkg.version
+	},
 	utils, 
 	server: (routes, opts) => {
 		opts = Object.assign({}, config, opts);
@@ -33,6 +35,7 @@ var self = module.exports = {
 		return async (req, res) => {
 			var js, m;
 			try {
+				if (!self.info.url) self.info.url = 'https://' + req.headers.host;
 				if (req.method == 'GET') {
 					js = m = utils.url(req.url);
 				}
@@ -41,7 +44,7 @@ var self = module.exports = {
 				}
 				else throw new Error('Unsupported method [' + req.method + ']');
 
-				if (self.DEBUG) console.log('INPUT MSG', JSON.stringify(js));
+				if (self.DEBUG) console.dir(js, {depth: null});
 	
 				// the route is specified in the request but overridden
 				// by dialogues.  if none specified an 'undefined' route
@@ -59,7 +62,9 @@ var self = module.exports = {
 					else if (m.cmd) dialogues[m.username] = m.cmd;
 				}
 	
-				await send(m);
+				// requests coming in via url cannot post to a channel
+
+				if (m.chat_id) await send(m);
 			} catch(err) {
 				// transmit the error
 				opts.err("-- telegram-bot-now::server() general catch --");
@@ -96,7 +101,6 @@ function msg(js) {
 		chat_type: m.chat.type,
 		username: m.from.username,
 		parse_mode: 'Markdown',
-		method: 'sendMessage',
 		cmd, args: args || '',
 		photo: m.photo,
 		reply(o) {
@@ -117,6 +121,7 @@ function msg(js) {
 function send(msg) {
 	if (!msg) msg = this;
 	if (!msg.text) return;
+	if (!msg.method) msg.method = 'sendMessage';
 	
 	var ret = Promise.resolve(true);
 	var msgs = (typeof msg.text == 'string') ? [msg.text] : msg.text;
@@ -135,11 +140,11 @@ function send(msg) {
 		.then(res => res.json())
 		.then(res => {
 			if (self.DEBUG)
-				console.log('OUTPUT MSG', JSON.stringify(msg));
+				console.dir(msg, {depth: null});
 			if (!res.ok) {
 				console.log("-- telegram-bot-now::send() fetch fail --");
-				console.dir(res, {depth:null});
-				console.dir(msg, {depth:null});
+				console.dir(res, {depth: null});
+				console.dir(msg, {depth: null});
 			}
 		});
 	}
