@@ -71,8 +71,10 @@ module.exports = {
                         msg = desc.throwPrefix + f.nm.toUpperCase() + '_ERR';
                     if (!msg) msg = desc.throw || 'PARSE_FAIL';
                     throw {message: msg, field: f.nm};
-                } if (typeof ok != 'boolean') {
+                } else if (typeof ok != 'boolean') {
                     r[i] = ok;
+                } else if (typeof ok == 'object' && ok.err) {
+                    throw {message: ok.err, field: f.nm};
                 }
             }
             
