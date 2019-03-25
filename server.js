@@ -86,9 +86,7 @@ var self = module.exports = {
 
 function msg(js) {
 	var m = js.message;
-	var [args, cmd] = m.reply_to_message 
-		? [m.reply_to_message.text]
-		: [m.text];
+	var cmd, args = (m.reply_to_message || m).text || '';
 		
 	if (args.startsWith('/')) {
 		let x; [x, cmd, args] = args.match(/^\/(\w+)(?:\s+(.*))?/);
@@ -100,6 +98,7 @@ function msg(js) {
 		parse_mode: 'Markdown',
 		method: 'sendMessage',
 		cmd, args: args || '',
+		photo: m.photo,
 		reply(o) {
 			if (!o) throw new Error('-- telegram-bot-now::msg(): No reply specified --');
 			var m = Object.assign({}, this);
