@@ -17,6 +17,7 @@ const bot = "https://api.telegram.org/bot" + API_KEY;
 
 var dialogues = {};
 const FAIL = "An unexpected error has occurred.  Please report it to the bot /owner";
+const GREEK = "You have typed an unsupported command.  Please refer to /help and try again";
 
 // useful to client
 utils.msg = send;
@@ -31,6 +32,7 @@ var self = module.exports = {
 
 		// sanitise messages
 		if (!routes.MSG || typeof routes.MSG != "object") routes.MSG = {};
+		if (!routes.undefined) routes.undefined = () => GREEK;
 
 		return async (req, res) => {
 			var js, m;
@@ -44,15 +46,24 @@ var self = module.exports = {
 				}
 				else throw new Error('Unsupported method [' + req.method + ']');
 
-				if (self.DEBUG) console.dir(js, {depth: null});
+				if (self.DEBUG) {
+					console.log('INPUT MSG')
+					console.dir(js, {depth: null});
+				}
 	
 				// the route is specified in the request but overridden
 				// by dialogues.  if none specified an 'undefined' route
 				// is expected to be defined in the customer object
 	
-				let route = routes[m.cmd || dialogues[m.username]] 
-					|| routes['undefined'];
-				m.text = await route(m, js);
+				if (m.cmd.match(/^cancel$/i) && dialogues[m.username]) {
+					m.dialogue = false;
+					m.text = '* dialogue cancelled *';
+				}
+				else {
+					let route = routes[m.cmd || dialogues[m.username]] 
+						|| routes['undefined'];
+					m.text = await route(m, js);					
+				}
 	
 				// conversations can be enabled from within the route by
 				// merely setting the 'dialogue' property to true/false
@@ -125,9 +136,11 @@ function send(msg) {
 	
 	var ret = Promise.resolve(true);
 	var msgs = (typeof msg.text == 'string') ? [msg.text] : msg.text;
-	msgs = msgs.map(s => s.split(/^\s*---/m)).flat();
+	var splitter = o => typeof o == 'string' ? o.split(/^\s*---/m) : o;
+	msgs = msgs.map(splitter).flat()
+		.map(o => typeof o == 'string' ? {text: o.trimln()} : o);
 	for (var i = 0; i < msgs.length; i++) {
-		ret = post(ret, Object.assign({}, msg, {text: msgs[i].trimln()}));
+		ret = post(ret, Object.assign({}, msg, msgs[i]));
 	}
 	return ret;
 
@@ -139,8 +152,10 @@ function send(msg) {
 		}))
 		.then(res => res.json())
 		.then(res => {
-			if (self.DEBUG)
+			if (self.DEBUG) {
+				console.log('OUTPUT MSG')
 				console.dir(msg, {depth: null});
+			}
 			if (!res.ok) {
 				console.log("-- telegram-bot-now::send() fetch fail --");
 				console.dir(res, {depth: null});
