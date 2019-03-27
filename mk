@@ -90,7 +90,8 @@ msg() {
 
 	d=$(msg_data $srv $chat_id $from "$cmd" $photo)
 	if [ "$srv" == "-t" ]; then
-		fetch sendMessage $srv -d "$d" $(hdr -j)
+		[ "$photo" == "-p" ] && method="sendPhoto" || method="sendMessage"
+		fetch $method $srv -d "'$d'" $(hdr -j)
 	else
 		fetch $srv -d "'$d'" $(hdr -j)
 	fi
@@ -177,10 +178,10 @@ msg_data() {
 	if [ "$photo" == "-p" ]
 	then
 		f=$([ "$srv" == "-t" ] && msg_photoToTel || msg_photoToBot)
-		printf "{\"message\": $f}" $chat_id
+		printf "$f" $chat_id
 	else
 		f=$([ "$srv" == "-t" ] && msg_textToTel || msg_textToBot)
-		printf "{\"message\": $f}" $chat_id $from "$cmd"
+		printf "$f" $chat_id $from "$cmd"
 	fi
 }
 
@@ -198,11 +199,11 @@ msg_textToTel() {
 
 msg_textToBot() {
 	cat <<- EOF
-	{
+	{ "message": {
 		"chat": {"id": "%s", "type": "private"},
 		"from": {"username": "%s"},
 		"text": "%s"
-	}
+	}}
 	EOF
 }
 
@@ -217,15 +218,19 @@ msg_photoToTel() {
 
 msg_photoToBot() {
 	cat <<- EOF 
-	{   
-		"chat_id": "%s",
+	{ "message": {  
+		"chat": {
+			"id": "%s",
+			"type": "private"
+		},
+		"from": {"username": "bot"},
 		"photo": [{
 			"file_id": "$TELEGRAM_BOT_IMAGE",
 			"file_size": "857",
 			"width": "90", 
 			"height": "15"
 		}]
-	}   
+	}}
 	EOF
 }
 
