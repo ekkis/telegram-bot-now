@@ -26,33 +26,45 @@ help() {
 	   secret <telegram-api-key> - installs your Telegram API key
 	   secret <key> <value> - installs other secrets
 
-	To see the actual stattements issued by this script when running
+	To see the actual statements issued by this script when running
 	a command prefix the command with -d:
 
-	   # mk -d bind
+	   $ mk -d bind
 
 	To build a deployment just run this script without arguments:
 
-	   # mk
+	   $ mk
+
+	-- messaging --
+
+	For development you can run your bot using `npm start`.  You can send
+	messages to it from the command line like this:
+
+		$ mk msg -l "/ping" 2034492 "JohnDoe"	# local
+	
+	After deployment (hosted on Now) you can message the bot with `-b`:
+	
+		$ mk msg -b "/ping" 2034492 "JohnDoe"	# deployed
+
+	You can also message Telegram directly.  Hers's how:
+
+		$ mk msg -t "/ping" 2034492 "JohnDoe"	# Telegram
+
+	and for testing the sending of images, supply a valid file id via the
+	environment variable shown, and pass the -p parameter:
+
+		$ export TELEGRAM_BOT_IMAGE="AgADAQADaqgxGyX5yETF2DyyOFrdN_9sDDAABO6I-45utcxCSBoEAAEC"
+		$ mk msg -b "/ping" 2034492 "JohnDoe" -p
 
 	-- examples --
 
-	To ping your server:
+	To show current bindings:
 
-	   # mk msg "/ping" 2034492 "JohnDoe"
-
-	When running the server locally with `npm start`, you can send messages
-	like this:
-
-	   # mk msg - "/ping" 2034492 "JohnDoe"
-
-	If you want to message Telegram directly:
-
-		# mk msg -t "/ping" 2034492 "JohnDoe"
+		$ mk bind info
 
 	To set a secret with credentials for your database:
 
-	   # mk secret "DATABASE_AUTH" "JohnDoe:SomePassword"
+	   $ mk secret "DATABASE_AUTH" "JohnDoe:SomePassword"
 	EOF
 	exit 0
 }
@@ -70,12 +82,17 @@ logs() {
 }
 
 msg() {
-	srv=$1; cmd=$2; chat_id=$3; from=$4
-	d=$(printf "'$(msg_data $srv)'" $chat_id $from "$cmd")
+	srv=$1; cmd=$2; chat_id=$3; from=$4; photo=$5
+	[ "$photo" == "-p" -a "$TELEGRAM_BOT_IMAGE" == "" ] && {
+		echo "No Telegram bot image ID available"
+		exit 1
+	}
+
+	d=$(msg_data $srv $chat_id $from "$cmd" $photo)
 	if [ "$srv" == "-t" ]; then
 		fetch sendMessage $srv -d "$d" $(hdr -j)
 	else
-		fetch $srv -d "$d" $(hdr -j)
+		fetch $srv -d "'$d'" $(hdr -j)
 	fi
 }
 
@@ -155,7 +172,20 @@ fetch() {
 }
 
 msg_data() {
-    toT=$(cat <<- EOF
+	srv=$1; chat_id=$2; from=$3; cmd=$4; photo=$5
+	
+	if [ "$photo" == "-p" ]
+	then
+		f=$([ "$srv" == "-t" ] && msg_photoToTel || msg_photoToBot)
+		printf "{\"message\": $f}" $chat_id
+	else
+		f=$([ "$srv" == "-t" ] && msg_textToTel || msg_textToBot)
+		printf "{\"message\": $f}" $chat_id $from "$cmd"
+	fi
+}
+
+msg_textToTel() {
+    cat <<- EOF
 	{
 		"chat_id": "%s",
 		"chat_type": "private",
@@ -163,19 +193,40 @@ msg_data() {
 		"parse_mode": "Markdown",
 		"text": "%s"
 	}
-	EOF)
+	EOF
+}
 
-	frT=$(cat <<- EOF
+msg_textToBot() {
+	cat <<- EOF
 	{
-		"message": {
-			"chat": {"id": "%s", "type": "private"},
-			"from": {"username": "%s"},
-			"text": "%s"
-		}
+		"chat": {"id": "%s", "type": "private"},
+		"from": {"username": "%s"},
+		"text": "%s"
 	}
-	EOF)
-    
-    [ "$1" == "-t" ] && echo $toT || echo $frT
+	EOF
+}
+
+msg_photoToTel() {
+	cat <<- EOF 
+	{   
+		"chat_id": "%s",
+		"photo": "$TELEGRAM_BOT_IMAGE"
+	}   
+	EOF
+}
+
+msg_photoToBot() {
+	cat <<- EOF 
+	{   
+		"chat_id": "%s",
+		"photo": [{
+			"file_id": "$TELEGRAM_BOT_IMAGE",
+			"file_size": "857",
+			"width": "90", 
+			"height": "15"
+		}]
+	}   
+	EOF
 }
 
 # --- main() ------------------------------------------------------------------
