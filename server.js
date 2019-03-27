@@ -102,7 +102,7 @@ var self = module.exports = {
 
 function msg(js) {
 	var m = js.message;
-	var cmd, args = (m.reply_to_message || m).text || '';
+	var cmd = '', args = (m.reply_to_message || m).text || '';
 		
 	if (args.startsWith('/')) {
 		let x; [x, cmd, args] = args.match(/^\/(\w+)(?:\s+(.*))?/);
