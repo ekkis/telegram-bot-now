@@ -138,12 +138,21 @@ function send(msg) {
 	var msgs = (typeof msg.text == 'string') ? [msg.text] : msg.text;
 	var splitter = o => typeof o == 'string' ? o.split(/^\s*---/m) : o;
 	msgs = msgs.map(splitter).flat()
-		.map(o => typeof o == 'string' ? {text: o.trimln()} : o);
+		.map(o => typeof o == 'string' ? {text: o.trimln()} : o)
+		.map(photo);
+
+	msg.text = '';
 	for (var i = 0; i < msgs.length; i++) {
 		ret = post(ret, Object.assign({}, msg, msgs[i]));
 	}
 	return ret;
 
+	function photo(o) {
+		if (!o.photo) return o;
+		return {
+			method: 'sendPhoto', photo: o.photo
+		}
+	}
 	function post(p, msg) {
 		return p.then(() => fetch(bot + '/' + msg.method, {
 			method: 'post',
