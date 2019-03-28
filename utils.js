@@ -12,13 +12,15 @@ var xf = {
 
 // prototype methods
 
-Array.prototype.unique = function() { 
-    return this.filter((e, pos) => this.indexOf(e) == pos);
-}
+if (!Array.prototype.unique)
+    Array.prototype.unique = function() { 
+        return this.filter((e, pos) => this.indexOf(e) == pos);
+    }
 
-Array.prototype.trim = function() {
-    return this.map(s => typeof s == 'string' ? s.trim() : s);
-}
+if (!Array.prototype.trim)
+    Array.prototype.trim = function() {
+        return this.map(s => typeof s == 'string' ? s.trim() : s);
+    }
 
 if (!Array.prototype.flat) // polyfill for older versions of NodeJs that don't support this
 	Array.prototype.flat = function() {
@@ -26,19 +28,36 @@ if (!Array.prototype.flat) // polyfill for older versions of NodeJs that don't s
 		return this.reduce(r, []);
 	}
 
-String.prototype.sprintf = function(o) {
-	var s = this.toString();
-	if (typeof o != 'object') return s;
-	for (var k in o)
-		s = s.replace(new RegExp('%{' + k + '}', 'g'), o[k]);
-	return s;
-};
+if (!String.prototype.sprintf)
+    String.prototype.sprintf = function(o) {
+        var s = this.toString();
+        if (typeof o != 'object') return s;
+        for (var k in o)
+            s = s.replace(new RegExp('%{' + k + '}', 'g'), o[k]);
+        return s;
+    };
 
-String.prototype.trimln = function(s) {
-	return this.trim()
-		.replace(/^[ \t]*/gm, '')
-		.replace(/([^\n])\n/g, '$1 ');
-};
+if (!String.prototype.trimln)
+    String.prototype.trimln = function(s) {
+        return this.trim()
+            .replace(/^[ \t]*/gm, '')
+            .replace(/([^\n])\n/g, '$1 ');
+    };
+
+if (!Object.prototype.keys)
+    Object.prototype.keys = function() {
+        return Object.keys(this);
+    }
+
+if (!Object.prototype.map)
+    Object.prototype.map = function(fn) {
+        return this.keys().map(k => fn(this[k], k));
+    }
+
+if (!Object.prototype.each)
+    Object.prototype.each = function(fn) {
+        this.keys().map(k => this[k] = fn(this[k], k));
+    }
 
 // utilities
 
