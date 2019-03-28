@@ -4,7 +4,7 @@
   "description": "A NodeJs-based Telegram bot for the Now serverless platform",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha t/**/*.js"
   },
   "author": "Erick Calder <e@arix.com>",
   "keywords": [
@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "micro": "^9.3.3",
+    "mocha": "^6.0.2",
     "node-fetch": "^2.3.0"
   }
 }

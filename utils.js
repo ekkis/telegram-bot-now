@@ -107,7 +107,7 @@ module.exports = {
     },
     html: {
         table: (ths, trs) => {
-            for (var i in trs) {
+            for (var i = 0; i < trs.length; i++) {
                 if (!trs[i].match(/</))
                     trs[i] = '<tr><td>'+ trs[i].replace(/\|/g, '</td><td>') + '</td></tr>'
             }

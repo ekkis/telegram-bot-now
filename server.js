@@ -62,16 +62,15 @@ var self = module.exports = {
 				else {
 					let route = routes[m.cmd || dialogues[m.username]] 
 						|| routes['undefined'];
+					m.dialogue = !!dialogues[m.username];
 					m.text = await route(m, js);					
 				}
 	
 				// conversations can be enabled from within the route by
 				// merely setting the 'dialogue' property to true/false
 	
-				if ('dialogue' in m) {
-					if (!m.dialogue) dialogues[m.username] = undefined;
-					else if (m.cmd) dialogues[m.username] = m.cmd;
-				}
+				if (m.dialogue) { if (m.cmd) dialogues[m.username] = m.cmd; }
+				else dialogues[m.username] = undefined;
 	
 				// requests coming in via url cannot post to a channel
 
