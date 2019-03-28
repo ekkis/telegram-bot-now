@@ -26,7 +26,16 @@ if (!Array.prototype.flat) // polyfill for older versions of NodeJs that don't s
 	Array.prototype.flat = function() {
 		var r = (ret, v) => ret.concat(Array.isArray(v) ? v.flat() : v);
 		return this.reduce(r, []);
-	}
+    }
+    
+if (!Array.prototype.unpack)
+    Array.prototype.unpack = function() {
+        var l = this.length;
+        return l == 1 ? this[0] 
+            : l == 0 && arguments.length > 0
+            ? undefined
+            : this;
+    }
 
 if (!String.prototype.sprintf)
     String.prototype.sprintf = function(o) {
@@ -43,21 +52,6 @@ if (!String.prototype.trimln)
             .replace(/^[ \t]*/gm, '')
             .replace(/([^\n])\n/g, '$1 ');
     };
-
-if (!Object.prototype.keys)
-    Object.prototype.keys = function() {
-        return Object.keys(this);
-    }
-
-if (!Object.prototype.map)
-    Object.prototype.map = function(fn) {
-        return this.keys().map(k => fn(this[k], k));
-    }
-
-if (!Object.prototype.each)
-    Object.prototype.each = function(fn) {
-        this.keys().map(k => this[k] = fn(this[k], k));
-    }
 
 // utilities
 
