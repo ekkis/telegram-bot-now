@@ -78,7 +78,7 @@ logs() {
 	[ -z "$url" ] && {
 		echo $msg; exit 0
 	}
-	now logs -f $url
+	now logs -n ${1:-200} -f $url
 }
 
 msg() {
