@@ -177,8 +177,11 @@ msg_data() {
 	
 	if [ "$photo" == "-p" ]
 	then
-		f=$([ "$srv" == "-t" ] && msg_photoToTel || msg_photoToBot)
-		printf "$f" $chat_id
+		if [ "$srv" == "-t" ]; then
+			printf "$(msg_photoToTel)" $chat_id
+		else
+			printf "$(msg_photoToBot)" $chat_id $from
+		fi
 	else
 		f=$([ "$srv" == "-t" ] && msg_textToTel || msg_textToBot)
 		printf "$f" $chat_id $from "$cmd"
@@ -223,7 +226,7 @@ msg_photoToBot() {
 			"id": "%s",
 			"type": "private"
 		},
-		"from": {"username": "bot"},
+		"from": {"username": "%s"},
 		"photo": [{
 			"file_id": "$TELEGRAM_BOT_IMAGE",
 			"file_size": "857",
