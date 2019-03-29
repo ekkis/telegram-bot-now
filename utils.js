@@ -1,10 +1,10 @@
 // convenience transform functions
 
 var xf = {
-    uc: (s) => { return s.toUpperCase() },
-    lc: (s) => { return s.toLowerCase() },
+    uc: (s) => { return (s || '').toUpperCase() },
+    lc: (s) => { return (s || '').toLowerCase() },
     tc: (s) => { 
-        return s.toLowerCase()
+        return (s || '').toLowerCase()
             .replace(/(^|\s)\S/g, t => t.toUpperCase());
     },
     n: (s) => { return parseFloat(s) },
@@ -23,8 +23,8 @@ if (!Array.prototype.trim)
     }
 
 if (!Array.prototype.flat) // polyfill for older versions of NodeJs that don't support this
-	Array.prototype.flat = function() {
-		var r = (ret, v) => ret.concat(Array.isArray(v) ? v.flat() : v);
+	Array.prototype.flat = function(depth = 1) {
+		var r = (ret, v) => ret.concat(Array.isArray(v) && depth > 0 ? v.flat(depth - 1) : v);
 		return this.reduce(r, []);
     }
     
@@ -60,12 +60,13 @@ module.exports = {
         var m = s;
         if (typeof s == 'object') s = s.args;
         if (desc.clean) {
-            var rep = '';
+            var re = desc.clean, rep = '';
             if (Array.isArray(desc.clean)) {
-                desc.clean = new RegExp('\\s*(' + desc.clean.join('|') + ')\\s*', 'ig');
+                re = '\\s*(' + desc.clean.join('|') + ')\\s*'
+                re = new RegExp(re, 'ig');
                 rep = ' ';
             }
-            s = s.replace(desc.clean, rep);
+            s = s.replace(re, rep);
         }
 
         var ret = {};
@@ -73,14 +74,13 @@ module.exports = {
         if (!Array.isArray(desc.fields)) desc.fields = [desc.fields];
         for (var i = 0; i < desc.fields.length; i++) {
             let f = desc.fields[i];
-
             if (!r[i] && f.optional) continue;
             if (f.clean) r[i] = r[i].replace(f.clean, '');
             if (f.valid) {
                 let vt = typeof f.valid;
                 let ok = (vt == 'function')
                     ? f.valid(r[i], m)
-                    : (f.valid instanceof RegExp) ? r[i].match(f.valid)
+                    : (f.valid instanceof RegExp) ? !!r[i].match(f.valid)
                     : false;
                 if (!ok) {
                     let msg = f.throw;
@@ -120,12 +120,12 @@ module.exports = {
         for (var k in o) {
             if (typeof o[k] !== 'function') continue;
             let fn = o[k].toString().split(/\n/);
-            let rem = "";
+            let rem = [];
             for (var ln of fn) {
                 if (ln.match(/\s*\/\//))
-                    rem += ln.replace("//", "").trim();
-                else if (rem) {
-                    ret.push("/" + k + " " + rem);
+                    rem.push(ln.replace("//", "").trim());
+                else if (rem.length > 0) {
+                    ret.push("/" + k + " " + rem.join(' '));
                     break;
                 }
             }
@@ -136,7 +136,10 @@ module.exports = {
     },
     url: (s) => {
         var ret = {}; 
-        var r = s.replace(/.*\?/, '').split(/[&=]/);
+        var [base, args] = s.split('?');
+        if (!args) return ret;
+
+        var r = args.split(/[&=]/);
         for (var i = 0; i < r.length; i += 2) {
             ret[r[i]] = r[i+1];
         }   
