@@ -19,13 +19,11 @@ var dialogues = {};
 const FAIL = "An unexpected error has occurred.  Please report it to the bot /owner";
 const GREEK = "You have typed an unsupported command.  Please refer to /help and try again";
 
-// useful to client
-utils.msg = send;
-
 var self = module.exports = {
 	info: {
 		version: pkg.version
 	},
+	dialogues,
 	utils, 
 	server: (routes, opts) => {
 		opts = Object.assign({}, config, opts);
@@ -54,7 +52,7 @@ var self = module.exports = {
 				// the route is specified in the request but overridden
 				// by dialogues.  if none specified an 'undefined' route
 				// is expected to be defined in the customer object
-	
+
 				if (m.cmd.match(/^cancel$/i) && dialogues[m.username]) {
 					m.dialogue = false;
 					m.text = '* dialogue cancelled *';
@@ -74,7 +72,7 @@ var self = module.exports = {
 	
 				// requests coming in via url cannot post to a channel
 
-				if (m.chat_id) await send(m);
+				if (m.chat_id) await utils.msg(m);
 			} catch(err) {
 				// transmit the error
 				opts.err("-- telegram-bot-now::server() general catch --");
@@ -85,7 +83,7 @@ var self = module.exports = {
 					try {
 						let s = routes.MSG[err.message] || "";
 						m.text = s || routes.MSG['FAIL'] || FAIL;
-						await send(m);	
+						await utils.msg(m);	
 					}
 					catch(e) {
 						opts.err("-- telegram-bot-now::send() send within catch fail --");
@@ -118,7 +116,7 @@ function msg(js) {
 			var m = Object.assign({}, this);
 			if (typeof o == 'string') m.text = o;
 			else m = Object.assign(m, o);
-			return send(m);
+			return utils.msg(m);
 		}
 	};
 
@@ -128,7 +126,7 @@ function msg(js) {
 	return ret;
 }
 	
-function send(msg) {
+utils.msg = function(msg) {
 	if (!msg) msg = this;
 	if (!msg.text) return;
 	if (!msg.method) msg.method = 'sendMessage';
