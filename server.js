@@ -23,7 +23,6 @@ var self = module.exports = {
 	info: {
 		version: pkg.version
 	},
-	dialogues,
 	utils, 
 	server: (routes, opts) => {
 		opts = Object.assign({}, config, opts);
@@ -35,6 +34,7 @@ var self = module.exports = {
 		return async (req, res) => {
 			var js, m;
 			try {
+				if (opts.state) dialogues = opts.state.get('dialogues');
 				if (!self.info.url) self.info.url = 'https://' + req.headers.host;
 				if (req.method == 'GET') {
 					js = m = utils.url(req.url);
@@ -69,7 +69,8 @@ var self = module.exports = {
 	
 				if (m.dialogue) { if (m.cmd) dialogues[m.username] = m.cmd; }
 				else dialogues[m.username] = undefined;
-	
+				if (opts.state) opts.state.save('dialogues', dialogues);
+				
 				// requests coming in via url cannot post to a channel
 
 				if (m.chat_id) await utils.msg(m);
