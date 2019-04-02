@@ -53,9 +53,15 @@ if (!String.prototype.trimln)
             .replace(/([^\n])\n/g, '$1 ');
     };
 
+if (!String.prototype.uc)
+    String.prototype.uc = function() { return this.toUpperCase(); }
+
+if (!String.prototype.lc)
+    String.prototype.lc = function() { return this.toLowerCase(); }
+
 // utilities
 
-module.exports = {
+var self = module.exports = {
     parse: (s, desc) => {
         var m = s;
         if (typeof s == 'object') s = s.args;
@@ -105,6 +111,20 @@ module.exports = {
         var k = Object.keys(ret);
         return k.length == 1 ? ret[k[0]] : ret;
     },
+    dialogue: async (m, steps, d, opts) => {
+        if (!d.route) {
+            d.route = m.cmd;
+            d.rsp = [];
+        }
+
+        var step = steps[d.rsp.length];
+        var o = Object.assign({fields: step}, opts);
+		var rsp = self.parse(m, o);
+		d.rsp.push({nm: step.nm, val: rsp});
+		if (step.post) rsp = await step.post(rsp);
+        
+        return {nm: step.nm, rsp};
+    },
     html: {
         table: (ths, trs) => {
             for (var i = 0; i < trs.length; i++) {
@@ -144,5 +164,13 @@ module.exports = {
             ret[r[i]] = r[i+1];
         }   
         return ret;
-    }
+    },
+    post: (p, msg) => {
+		return p.then(() => fetch(self.bot + '/' + msg.method, {
+			method: 'post',
+			headers: {'Content-Type': 'application/json'},
+			body: JSON.stringify(msg)
+		}))
+		.then(res => res.json());
+	}
 }

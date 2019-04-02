@@ -13,7 +13,7 @@ The project is available from NPM and can be installed in the usual way:
 ```
 npm install --save telegram-bot-now
 ```
-But to deploy your bot you'll need the Now client.  Install it like this:
+But to deploy your bot you'll also need the Now client.  Install it like this:
 ```
 $ npm install -g now
 ```
@@ -28,8 +28,8 @@ Now you can grab our sample code:
 ```
 ./mk example
 ```
-> Please note: Windows users are out of luck unless they're using Cygwin 
-> or another environment with bash support
+> Please note: the make utility will not work on Windows.  Users of that operating
+> system are encouraged to install Cygwin or another bash shell available
 
 ## Deploy
 
