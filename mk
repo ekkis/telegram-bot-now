@@ -82,15 +82,15 @@ logs() {
 }
 
 msg() {
-	srv=$1; cmd=$2; chat_id=$3; from=$4; photo=$5
-	[ "$photo" == "-p" -a "$TELEGRAM_BOT_IMAGE" == "" ] && {
+	srv=$1; cmd=$2; chat_id=$3; from=$4; type=$5; args=$6
+	[ "$type" == "-p" -a "$TELEGRAM_BOT_IMAGE" == "" ] && {
 		echo "No Telegram bot image ID available"
 		exit 1
 	}
 
-	d=$(msg_data $srv $chat_id $from "$cmd" $photo)
+	d=$(msg_data $srv $chat_id $from "$cmd" $type "$args")
 	if [ "$srv" == "-t" ]; then
-		[ "$photo" == "-p" ] && method="sendPhoto" || method="sendMessage"
+		[ "$type" == "-p" ] && method="sendPhoto" || method="sendMessage"
 		fetch $method $srv -d "'$d'" $(hdr -j)
 	else
 		fetch $srv -d "'$d'" $(hdr -j)
@@ -173,15 +173,18 @@ fetch() {
 }
 
 msg_data() {
-	srv=$1; chat_id=$2; from=$3; cmd=$4; photo=$5
+	srv=$1; chat_id=$2; from=$3; cmd=$4; type=$5; args=$6
 	
-	if [ "$photo" == "-p" ]
+	if [ "$type" == "-p" ]
 	then
 		if [ "$srv" == "-t" ]; then
 			printf "$(msg_photoToTel)" $chat_id
 		else
 			printf "$(msg_photoToBot)" $chat_id $from
 		fi
+	elif [ "$type" == "-k" ]
+	then
+		printf "$(msg_keyboardToTel)" $chat_id "$args"
 	else
 		f=$([ "$srv" == "-t" ] && msg_textToTel || msg_textToBot)
 		printf "$f" $chat_id $from "$cmd"
@@ -234,6 +237,21 @@ msg_photoToBot() {
 			"height": "15"
 		}]
 	}}
+	EOF
+}
+
+msg_keyboardToTel() {
+	cat <<- EOF
+	{
+		"chat_id": "%s",
+		"text": "xx",
+		"reply_markup": {
+			"keyboard": [%s],
+			"one_time_keyboard": true,
+			"resize_keyboard": true,
+			"selective": false
+		}
+	}
 	EOF
 }
 
