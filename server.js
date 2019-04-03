@@ -1,5 +1,4 @@
 const {json} = require('micro');
-const fetch = require('node-fetch');
 const pkg = require('./package.json');
 const utils = require('./utils');
 
@@ -123,8 +122,19 @@ function msg(js) {
 			if (typeof o == 'string') m.text = o;
 			else m = Object.assign(m, o);
 			return utils.msg(m);
+		},
+		keyboard(r, resize = true, one_time = true, selective = false) {
+			this.reply_markup = {
+				keyboard: r,
+				resize_keyboard: resize,
+				one_time_keyboard: one_time,
+				selective
+			};
 		}
 	};
+
+	// when the bot is conversing in a group, it should
+	// always quote the request
 
 	if (m.chat.type == 'group')
 		ret.reply_to_message_id = m.message_id;

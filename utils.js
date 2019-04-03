@@ -1,3 +1,5 @@
+const fetch = require('node-fetch');
+
 // convenience transform functions
 
 var xf = {
