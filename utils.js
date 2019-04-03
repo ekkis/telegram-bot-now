@@ -114,7 +114,7 @@ var self = module.exports = {
         return k.length == 1 ? ret[k[0]] : ret;
     },
     dialogue: async (m, steps, d, opts) => {
-        if (!d.route) {
+        if (m.cmd) {
             d.route = m.cmd;
             d.rsp = [];
         }
@@ -123,7 +123,7 @@ var self = module.exports = {
         var o = Object.assign({fields: step}, opts);
 		var rsp = self.parse(m, o);
 		d.rsp.push({nm: step.nm, val: rsp});
-		if (step.post) rsp = await step.post(rsp);
+		if (step.post) rsp = await step.post(rsp, d.rsp);
         
         return {nm: step.nm, rsp};
     },
