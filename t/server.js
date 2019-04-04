@@ -36,19 +36,17 @@ var routes = {
 			{nm: 'initial'},
 			{nm: 'interim', post: s => ({name: s})},
 			{nm: 'final'}
-		]
-
-		try {
-			var step = await bot.utils.dialogue(m, steps, meta.dialogue);
-			return routes.MSG[step.nm].sprintf(step.rsp);
-		} catch (e) {
-			console.log('CHAT', e)
-		}
+		];
+		return bot.utils.dialogue({
+			msg: m, steps, 
+			state: meta.dialogue,
+			MSG: routes.MSG
+		})
 	},
 	MSG: {
-		initial: 'Greetings. What\'s your name?',
-		interim: 'Hello %{name}',
-		final: 'Good bye'
+		CHAT_INITIAL: 'Greetings. What\'s your name?',
+		CHAT_INTERIM: 'Hello %{name}',
+		CHAT_FINAL: 'Good bye'
 	}
 }
 
@@ -105,7 +103,9 @@ function equal(cmd, res) {
 
 	var i = 0;
 	return (p, msg) => {
-		delete msg.reply; // function
+		// removes functions 
+		msg = JSON.parse(JSON.stringify(msg));
+		if (!('photo' in msg)) msg.photo = undefined;
 		expected.cmd = ''; expected.args = cmd
 		if (cmd.startsWith('/')) {
 			var x; [x, expected.cmd, expected.args]
@@ -158,14 +158,14 @@ describe('Server routes', () => {
 	})
 	describe('Dialogue support', () => {
 		it('initial step', () => {
-			return test(url, '/chat', routes.MSG.initial)
+			return test(url, '/chat', routes.MSG.CHAT_INITIAL)
 		})
 		it('interim step', () => {
 			var name = 'ziggy';
-			return test(url, name, routes.MSG.interim.sprintf({name}))
+			return test(url, name, routes.MSG.CHAT_INTERIM.sprintf({name}))
 		})
 		it('final step', () => {
-			return test(url, 'whatever!', routes.MSG.final)
+			return test(url, 'whatever!', routes.MSG.CHAT_FINAL)
 		})
 	})
 })

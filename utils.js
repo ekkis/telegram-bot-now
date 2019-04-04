@@ -29,7 +29,12 @@ if (!Array.prototype.flat) // polyfill for older versions of NodeJs that don't s
 		var r = (ret, v) => ret.concat(Array.isArray(v) && depth > 0 ? v.flat(depth - 1) : v);
 		return this.reduce(r, []);
     }
-    
+
+if (!Array.prototype.last)
+    Array.prototype.last = function() {
+        return this[this.length - 1];
+    }
+
 if (!Array.prototype.unpack)
     Array.prototype.unpack = function() {
         var l = this.length;
@@ -56,10 +61,14 @@ if (!String.prototype.trimln)
     };
 
 if (!String.prototype.uc)
-    String.prototype.uc = function() { return this.toUpperCase(); }
+    String.prototype.uc = function() { 
+        return this.toUpperCase(); 
+    }
 
 if (!String.prototype.lc)
-    String.prototype.lc = function() { return this.toLowerCase(); }
+    String.prototype.lc = function() { 
+        return this.toLowerCase(); 
+    }
 
 // utilities
 
@@ -92,8 +101,8 @@ var self = module.exports = {
                     : false;
                 if (!ok) {
                     let msg = f.throw;
-                    if (desc.throwPrefix) 
-                        msg = desc.throwPrefix + f.nm.toUpperCase() + '_ERR';
+                    if (!msg && desc.throwPrefix) 
+                        msg = [desc.throwPrefix, f.nm, 'ERR'].join('_').uc();
                     if (!msg) msg = desc.throw || 'PARSE_FAIL';
                     throw {message: msg, field: f.nm};
                 } else if (typeof ok != 'boolean') {
@@ -113,19 +122,38 @@ var self = module.exports = {
         var k = Object.keys(ret);
         return k.length == 1 ? ret[k[0]] : ret;
     },
-    dialogue: async (m, steps, d, opts) => {
-        if (m.cmd) {
-            d.route = m.cmd;
-            d.rsp = [];
+    dialogue: async (o) => {
+        var {msg, steps, state, opts, MSG} = o;
+        if (msg.cmd) {
+            state.route = msg.cmd;
+            state.rsp = [];
         }
 
-        var step = steps[d.rsp.length];
-        var o = Object.assign({fields: step}, opts);
-		var rsp = self.parse(m, o);
-		d.rsp.push({nm: step.nm, val: rsp});
-		if (step.post) rsp = await step.post(rsp, d.rsp);
-        
-        return {nm: step.nm, rsp};
+        var step = steps[state.rsp.length];
+        var o = {fields: step, throwPrefix: state.route};
+		var val = self.parse(msg, Object.assign(o, opts));
+		state.rsp.push({nm: step.nm, val});
+
+		if (step.post) {
+            let post = await step.post(val, state.rsp);
+            if (post) val = post;
+        }
+
+        // if no messages provided it's up to the caller
+        // to generate them
+        if (!MSG) return {nm: step.nm, val};
+
+        // messages conform to a pattern: name of route, name of
+        // step, joined with underscores, all uppercase
+
+        var ret = MSG[[state.route, step.nm].join('_').uc()];
+        if (!ret) throw new Error('No message for step [' + step.nm + ']');
+		if (typeof ret == 'object') {
+			msg.keyboard(val.choices || ret.choices);
+			ret = ret.message;
+        }
+        o = typeof val == 'object' ? val : state.rsp.last();
+		return ret.sprintf(o);
     },
     html: {
         table: (ths, trs) => {
