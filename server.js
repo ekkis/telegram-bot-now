@@ -3,7 +3,7 @@ const pkg = require('./package.json');
 const utils = require('./utils');
 
 var config = {
-	err: console.log
+	err: console.error	// eslint-disable-line no-console
 };
 
 // ensure we have Telegram account
@@ -24,7 +24,7 @@ var self = module.exports = {
 		CANCELLED: 'Your session has been cancelled.'
 	},
 	server: (routes, opts) => {
-		opts = Object.assign({}, config, opts);
+		opts = Object.assign(config, opts);
 		utils.state = opts.state;
 		utils.info = self.info;
 
@@ -51,11 +51,7 @@ var self = module.exports = {
 					js = await json(req); m = msg(js);
 				}
 				else throw new Error('Unsupported method [' + req.method + ']');
-
-				if (self.DEBUG) {
-					console.log('INPUT MSG')
-					console.dir(js, {depth: null});
-				}
+				debug('INPUT', js);
 	
 				// the route is specified in the request but overridden
 				// by dialogues.  if none specified an 'undefined' route
@@ -81,7 +77,6 @@ var self = module.exports = {
 				if (m.chat_id) utils.msg(m);
 			} catch(err) {
 				// transmit the error
-				opts.err("-- telegram-bot-now::server() general catch --");
 				opts.err(err);
 	
 				// if a message could be produced, notify the user/group
@@ -92,7 +87,6 @@ var self = module.exports = {
 					await utils.msg(m);	
 				}
 				catch(e) {
-					opts.err("-- telegram-bot-now::send() send within catch fail --");
 					opts.err(e); 
 				}	
 			} finally {
@@ -107,7 +101,7 @@ function msg(js) {
 	var cmd = '', args = (m.reply_to_message || m).text || '';
 		
 	if (args.startsWith('/')) {
-		let x; [x, cmd, args] = args.match(/^\/(\w+)(?:\s+(.*))?/);
+		[, cmd, args] = args.match(/^\/(\w+)(?:\s+(.*))?/);
 	}
 	var ret = {
 		chat_id: m.chat.id,
@@ -161,14 +155,10 @@ utils.msg = function(msg) {
 	for (var i = 0; i < msgs.length; i++) {
 		ret = utils.post(ret, Object.assign({}, msg, msgs[i]))
 			.then(res => {
-				if (self.DEBUG) {
-					console.log('OUTPUT MSG')
-					console.dir(msg, {depth: null});
-				}
+				debug('OUTPUT', msg);
 				if (!res.ok) {
-					console.log("-- telegram-bot-now::send() fetch fail --");
-					console.dir(res, {depth: null});
-					console.dir(msg, {depth: null});
+					config.err(res);
+					config.err(msg);
 				}
 			});
 	}
@@ -179,5 +169,12 @@ utils.msg = function(msg) {
 		return {
 			method: 'sendPhoto', photo: o.photo
 		}
+	}
+}
+
+function debug(title, obj) {
+	if (self.DEBUG) {
+		console.log(title);					// eslint-disable-line no-console
+		console.dir(obj, {depth: null});	// eslint-disable-line no-console
 	}
 }

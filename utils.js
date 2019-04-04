@@ -54,7 +54,7 @@ if (!String.prototype.sprintf)
     };
 
 if (!String.prototype.trimln)
-    String.prototype.trimln = function(s) {
+    String.prototype.trimln = function() {
         return this.trim()
             .replace(/^[ \t]*/gm, '')
             .replace(/([^\n])\n/g, '$1 ');
@@ -130,7 +130,7 @@ var self = module.exports = {
         }
 
         var step = steps[state.rsp.length];
-        var o = {fields: step, throwPrefix: state.route};
+        o = {fields: step, throwPrefix: state.route};
 		var val = self.parse(msg, Object.assign(o, opts));
 		state.rsp.push({nm: step.nm, val});
 
@@ -186,7 +186,7 @@ var self = module.exports = {
     },
     url: (s) => {
         var ret = {}; 
-        var [base, args] = s.split('?');
+        var [, args] = s.split('?');
         if (!args) return ret;
 
         var r = args.split(/[&=]/);

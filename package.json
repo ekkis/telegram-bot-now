@@ -4,7 +4,11 @@
   "description": "A NodeJs-based Telegram bot for the Now serverless platform",
   "main": "server.js",
   "scripts": {
-    "test": "mocha t/*.js"
+    "pretest": "npm install",
+    "test": "eslint *.js && mocha t/*.js",
+    "preversion": "npm run test",
+    "version": "",
+    "postversion": "git push && git push --tags && npm publish"
   },
   "author": "Erick Calder <e@arix.com>",
   "keywords": [
@@ -24,6 +28,7 @@
     "node-fetch": "^2.3.0"
   },
   "devDependencies": {
+    "eslint": "^5.16.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "test-listen": "^1.1.0"
