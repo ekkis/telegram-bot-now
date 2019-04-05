@@ -1,74 +1,14 @@
 const fetch = require('node-fetch');
+const jsp = require('js-prototype-lib');
 
 // convenience transform functions
 
 var xf = {
-    uc: (s) => { return (s || '').toUpperCase() },
-    lc: (s) => { return (s || '').toLowerCase() },
-    tc: (s) => { 
-        return (s || '').toLowerCase()
-            .replace(/(^|\s)\S/g, t => t.toUpperCase());
-    },
-    n: (s) => { return parseFloat(s) },
+    uc: (s = '') => s.uc(),
+    lc: (s = '') => s.lc(),
+    tc: (s = '') => s.lc().replace(/(^|\s)\S/g, t => t.uc()),
+    n: (s) => parseFloat(s),
 }
-
-// prototype methods
-
-if (!Array.prototype.unique)
-    Array.prototype.unique = function() { 
-        return this.filter((e, pos) => this.indexOf(e) == pos);
-    }
-
-if (!Array.prototype.trim)
-    Array.prototype.trim = function() {
-        return this.map(s => typeof s == 'string' ? s.trim() : s);
-    }
-
-if (!Array.prototype.flat) // polyfill for older versions of NodeJs that don't support this
-	Array.prototype.flat = function(depth = 1) {
-		var r = (ret, v) => ret.concat(Array.isArray(v) && depth > 0 ? v.flat(depth - 1) : v);
-		return this.reduce(r, []);
-    }
-
-if (!Array.prototype.last)
-    Array.prototype.last = function() {
-        return this[this.length - 1];
-    }
-
-if (!Array.prototype.unpack)
-    Array.prototype.unpack = function() {
-        var l = this.length;
-        return l == 1 ? this[0] 
-            : l == 0 && arguments.length > 0
-            ? undefined
-            : this;
-    }
-
-if (!String.prototype.sprintf)
-    String.prototype.sprintf = function(o) {
-        var s = this.toString();
-        if (typeof o != 'object') return s;
-        for (var k in o)
-            s = s.replace(new RegExp('%{' + k + '}', 'g'), o[k]);
-        return s;
-    };
-
-if (!String.prototype.trimln)
-    String.prototype.trimln = function() {
-        return this.trim()
-            .replace(/^[ \t]*/gm, '')
-            .replace(/([^\n])\n/g, '$1 ');
-    };
-
-if (!String.prototype.uc)
-    String.prototype.uc = function() { 
-        return this.toUpperCase(); 
-    }
-
-if (!String.prototype.lc)
-    String.prototype.lc = function() { 
-        return this.toLowerCase(); 
-    }
 
 // utilities
 
@@ -130,8 +70,8 @@ var self = module.exports = {
         }
 
         var step = steps[state.rsp.length];
-        o = {fields: step, throwPrefix: state.route};
-		var val = self.parse(msg, Object.assign(o, opts));
+        opts = Object.assign({fields: step, throwPrefix: state.route}, opts)
+		var val = self.parse(msg, opts);
 		state.rsp.push({nm: step.nm, val});
 
 		if (step.post) {
@@ -204,3 +144,5 @@ var self = module.exports = {
 		.then(res => res.json());
 	}
 }
+
+jsp.install();
