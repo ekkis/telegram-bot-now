@@ -146,7 +146,44 @@ var self = module.exports = {
 			body: JSON.stringify(msg)
 		}))
 		.then(res => res.json());
-	}
+    },
+    msg: (msg) => {
+        if (!msg) msg = this;
+        if (!msg.text) return;
+        if (!msg.method) msg.method = 'sendMessage';
+    
+        var msgs = (typeof msg.text == 'string') ? [msg.text] : msg.text;
+        var splitter = o => typeof o == 'string' ? o.split(/^\s*---/m) : o;
+        msgs = msgs.map(splitter).flat()
+            .map(o => typeof o == 'string' ? {text: o.trimln()} : o)
+            .map(photo);
+        msg.text = '';
+    
+        var ret = Promise.resolve(true);
+        for (var i = 0; i < msgs.length; i++) {
+            ret = self.post(ret, Object.assign({}, msg, msgs[i]))
+                .then(res => {
+                    self.debug('OUTPUT', msg);
+                    if (!res.ok) self.err({res, msg});
+                });
+        }
+        return ret;
+    
+        function photo(o) {
+            if (!o.photo) return o;
+            return {
+                method: 'sendPhoto', photo: o.photo
+            }
+        }
+    },
+    debug: (title, obj) => {
+        if (!self.server.DEBUG) return;
+        console.log(title);					// eslint-disable-line no-console
+        console.dir(obj, {depth: null});	// eslint-disable-line no-console
+    },
+    err: (e) => {
+        console.error(e);                   // eslint-disable-line no-console
+    }
 }
 
 jsp.install();
