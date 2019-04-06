@@ -57,14 +57,14 @@ var self = module.exports = {
 				);
 				var route = m.cmd || dialogue.route;
 				if (route.match(/^cancel$/i)) {
-					opts.state.rm(app, m.username, 'dialogue');
+					dialogue = undefined;
 					m.text = self.MSG.CANCELLED;
 				}
 				else {
 					route = routes[route] || routes['undefined'];
 					m.text = await route(m, {req, dialogue});
-					opts.state.save(app, m.username, 'dialogue', dialogue);
 				}
+				opts.state.save(app, m.username, 'dialogue', dialogue);
 	
 				// requests coming in via url cannot post to a channel
 

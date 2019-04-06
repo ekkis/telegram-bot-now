@@ -91,13 +91,9 @@ var self = module.exports = {
 		if (typeof ret == 'object') {
 			msg.keyboard(val.choices || ret.choices);
 			ret = ret.message;
-        }
-        ret = ret.sprintf(typeof val == 'object' ? val : state.rsp.last());
-        if (steps.length == state.rsp.length) {
-            state.route = undefined;
-            state.rsp = [];
-        }
-		return ret;
+        }        
+        if (steps.length == state.rsp.length) o.state = undefined;
+		return ret.sprintf(typeof val == 'object' ? val : state.rsp.last());
     },
     html: {
         table: (ths, trs) => {
