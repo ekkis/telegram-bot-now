@@ -101,6 +101,7 @@ function msg(js) {
 		chat_id: m.chat.id,
 		chat_type: m.chat.type,
 		username: m.from.username,
+		firstname: m.from.firstname,
 		parse_mode: 'Markdown',
 		cmd, args: args || '',
 		photo: m.photo,
