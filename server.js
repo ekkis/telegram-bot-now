@@ -2,12 +2,6 @@ const {json} = require('micro');
 const pkg = require('./package.json');
 const utils = require('./utils');
 
-// ensure we have Telegram account
-
-const API_KEY = process.env.TELEGRAM_API_KEY; 
-if (!API_KEY) throw new Error("No Telegram API key");
-utils.bot = "https://api.telegram.org/bot" + API_KEY;
-
 // local state
 
 var self = module.exports = {
@@ -21,6 +15,11 @@ var self = module.exports = {
 	},
 	server: (routes, opts) => {
 		utils.server = self;
+		utils.bind(opts.bind).catch(die).then(res => {
+			self.info.username = res.username;
+			self.info.name = res.first_name;
+			opts.state.save(res.username, null, 'bot', self.info);
+		});
 
 		// sanitise messages
 		if (!routes.MSG || typeof routes.MSG != "object") routes.MSG = {};
@@ -34,10 +33,21 @@ var self = module.exports = {
 			if (!routes[s]) routes[s] = () => self.MSG[s.uc()] || defaults[s]();
 		})
 
+		function bot_info(req) {
+			var bot = utils.url(req.url).bot;
+			return opts.state.get(bot, null, 'bot').then(res => {
+				res.url = 'https://' + req.headers.host;
+				res.username = bot;
+				return res;
+			})
+		}
+
 		return async (req, res) => {
 			var js, m;
 			try {
-				if (!self.info.url) self.info.url = 'https://' + req.headers.host;
+				var bot = await bot_info(req);
+				Object.assign(self.info, bot);
+
 				if (req.method == 'GET') {
 					js = m = utils.url(req.url);
 				}
@@ -51,9 +61,8 @@ var self = module.exports = {
 				// by dialogues.  if none specified an 'undefined' route
 				// is expected to be defined in the customer object
 
-				var app = self.info.username;
 				var dialogue = await opts.state.get(
-					app, m.username, 'dialogue'
+					bot.username, m.username, 'dialogue'
 				);
 				var route = m.cmd || dialogue.route;
 				if (route.match(/^cancel$/i)) {
@@ -64,11 +73,11 @@ var self = module.exports = {
 					route = routes[route] || routes['undefined'];
 					m.text = await route(m, {req, dialogue});
 				}
-				opts.state.save(app, m.username, 'dialogue', dialogue);
+				opts.state.save(bot.username, m.username, 'dialogue', dialogue);
 	
 				// requests coming in via url cannot post to a channel
 
-				if (m.chat_id) await utils.msg(m);
+				if (m.chat_id) await utils.msg(bot.key, m);
 			} catch(err) {
 				// transmit the error
 				utils.err(err);
@@ -119,6 +128,12 @@ function msg(js) {
 				one_time_keyboard: one_time,
 				selective
 			};
+		},
+		inline(r) {
+			r = r.map(o => typeof o == 'string' ? {text: o, callback_data: o} : o);
+			this.reply_markup = {
+				inline_keyboard: [r]
+			}
 		}
 	};
 
@@ -129,4 +144,9 @@ function msg(js) {
 		ret.reply_to_message_id = m.message_id;
 
 	return ret;
+}
+
+function die(e) {
+	console.log(e);
+	process.exit(1);
 }

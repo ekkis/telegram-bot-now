@@ -93,7 +93,8 @@ msg() {
 		[ "$type" == "-p" ] && method="sendPhoto" || method="sendMessage"
 		fetch $method $srv -d "'$d'" $(hdr -j)
 	else
-		fetch $srv -d "'$d'" $(hdr -j)
+		bot="?bot=$TELEGRAM_BOT_USERNAME"
+		fetch $bot $srv -d "'$d'" $(hdr -j)
 	fi
 }
 
@@ -104,9 +105,12 @@ bind() {
 	[ "$1" == "info" ] && {
 		fetch getWebhookInfo -t; exit
 	}
-
-	d='{"url": "%s", "allowed_updates": ["message", "channel_post"]}'
-	d=$(printf "'$d'" "$(cat .url)/server.js")
+	[ -z "$1" ] && {
+		echo "No bot name specified for the binding!"
+		exit 1
+	}
+	#d='{"url": "%s", "allowed_updates": ["message", "channel_post"]}'
+	d=$(printf '{"url": "%s"}' "$(cat .url)/server.js?bot=$1")
 	fetch setWebhook -t -d "$d" $(hdr -j)
 }
 
@@ -161,14 +165,14 @@ hdr() {
 
 fetch() {
 	srv=$1; cmd=""; shift
+	# server is optional
 	[[ "$srv" != -* ]] && {
 		cmd=$srv; srv=$1; shift
 	}
-	cmd="curl $@ $(url $srv)/$cmd"
-	[ "$DEBUG" == "Y" ] && {
-		echo $cmd
-	}
-	eval $cmd
+	url="curl $@ $(url $srv)"
+	[ ! -z "$cmd" ] && url="$url$cmd"
+	[ "$DEBUG" == "Y" ] && echo $url
+	eval $url
 	echo ""
 }
 
@@ -266,12 +270,12 @@ msg_keyboardToTel() {
 [ -z "$TELEGRAM_API_KEY" ] && {
 	echo "Telegram API not set.  Please set the value in your local environment with:"
 	echo "export TELEGRAM_API_KEY=xxxxxxxx"
-	exit 0
+	exit 1
 }
 [ ! -z "$1" ] && {
-	"$@"; exit 0
+	"$@"; exit
 }
 
 [ -f .url ] && now rm --yes $(cat .url)
 now > .url
-bind
+bind $TELEGRAM_BOT_USERNAME

@@ -87,7 +87,7 @@ var self = module.exports = {
         // step, joined with underscores, all uppercase
 
         var ret = MSG[[state.route, step.nm].join('_').uc()];
-        if (!ret) throw new Error('No message for step [' + step.nm + ']');
+        if (!ret) die('No message for step [' + step.nm + ']');
 		if (typeof ret == 'object') {
 			msg.keyboard(val.choices || ret.choices);
 			ret = ret.message;
@@ -135,13 +135,25 @@ var self = module.exports = {
         }   
         return ret;
     },
-    post: (p, msg) => {
-		return p.then(() => fetch(self.bot + '/' + msg.method, {
+    tg: (key, method) => {
+        if (!key) die('No Telegram bot API key');
+        if (!method) die('No method specified for Telegram call');
+        return 'https://api.telegram.org/bot' + key + '/' + method;
+    },
+    get: (key, cmd) => {
+        return fetch(self.tg(key, cmd))
+            .then(res => res.json());
+    },
+    post: (key, msg, p) => {
+		var ret = fetch(self.tg(key, msg.method), {
 			method: 'post',
 			headers: {'Content-Type': 'application/json'},
 			body: JSON.stringify(msg)
-		}))
-		.then(res => res.json());
+		})
+        .then(res => res.json());
+        
+        if (p instanceof Promise) ret = p.then(() => ret);
+        return ret;
     },
     msg: (msg) => {
         if (!msg) msg = this;
@@ -152,12 +164,12 @@ var self = module.exports = {
         var splitter = o => typeof o == 'string' ? o.split(/^\s*---/m) : o;
         msgs = msgs.map(splitter).flat()
             .map(o => typeof o == 'string' ? {text: o.trimln()} : o)
-            .map(photo);
+            .map(attachment);
         msg.text = '';
     
         var ret = Promise.resolve(true);
         for (var i = 0; i < msgs.length; i++) {
-            ret = self.post(ret, Object.assign({}, msg, msgs[i]))
+            ret = self.post(Object.assign({}, msg, msgs[i]), ret)
                 .then(res => {
                     self.debug('OUTPUT', msg);
                     if (!res.ok) self.err({res, msg});
@@ -165,12 +177,44 @@ var self = module.exports = {
         }
         return ret;
     
-        function photo(o) {
-            if (!o.photo) return o;
-            return {
+        function attachment(o) {
+            if (o.photo) return {
                 method: 'sendPhoto', photo: o.photo
             }
+            if (o.document) return {
+                method: 'sendDocument', document: o.document
+            }
+            return o;
         }
+    },
+    info: async (key) => {
+        return self.get(key, 'getMe').catch(console.log)
+    },
+    bind: (info) => {
+// var key = self.server.info.key;
+        if (!info.url) die('No Telegram bot url to bind to');
+        Object.assign(self.server.info, info);
+
+        var bot;
+        return self.info(info.key).then(res => {
+            if (!res.ok) {
+                var msg = 'Telegram bot API key'
+                msg += ' [Code: ' + res.error_code + ' / ' + res.description + ']';
+                die(msg);
+            }
+            bot = res.result;
+            return self.post(info.key, {
+                method: 'setWebhook',
+                url: info.url + '?bot=' + bot.username
+            })
+        })
+        .then(res => {
+            if (!res.ok) die(res.description);
+            return bot;
+        })
+    },
+    fork: (key, rm = false) => {
+        return self.bind({key, url: self.server.info.url});
     },
     debug: (title, obj) => {
         if (!self.server.DEBUG) return;
@@ -183,3 +227,7 @@ var self = module.exports = {
 }
 
 jsp.install();
+
+function die(s) {
+    throw new Error(s);
+}
