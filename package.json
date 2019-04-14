@@ -1,6 +1,6 @@
 {
   "name": "telegram-bot-now",
-  "version": "1.0.36",
+  "version": "1.0.37",
   "description": "A NodeJs-based Telegram bot for the Now serverless platform",
   "main": "server.js",
   "scripts": {
