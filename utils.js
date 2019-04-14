@@ -213,7 +213,7 @@ var self = module.exports = {
             return bot;
         })
     },
-    fork: (key, rm = false) => {
+    fork: (key) => {
         return self.bind({key, url: self.server.info.url});
     },
     debug: (title, obj) => {
