@@ -15,7 +15,7 @@ var self = module.exports = {
 	},
 	server: (routes, opts) => {
 		utils.server = self;
-		utils.bind(opts.bind).catch(die).then(res => {
+		if (opts.bind) utils.bind(opts.bind).catch(die).then(res => {
 			self.info.username = res.username;
 			self.info.name = res.first_name;
 			opts.state.save(res.username, null, 'bot', self.info);
@@ -35,6 +35,7 @@ var self = module.exports = {
 
 		function bot_info(req) {
 			var bot = utils.url(req.url).bot;
+			if (!bot) return Promise.resolve({username: 'test_bot'});
 			return opts.state.get(bot, null, 'bot').then(res => {
 				res.url = 'https://' + req.headers.host;
 				res.username = bot;
@@ -147,6 +148,6 @@ function msg(js) {
 }
 
 function die(e) {
-	console.log(e);
+	console.log(e);		// eslint-disable-line no-console
 	process.exit(1);
 }

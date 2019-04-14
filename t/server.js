@@ -5,7 +5,7 @@ const request = require('request-promise');
 const bot = require('../server');
 
 const DEBUG = false;
-bot.info.username = 'bot'
+bot.info.username = 'test_bot'
 
 // set up base routes
 
@@ -53,8 +53,13 @@ var routes = {
 var state = {
 	cache: {
 		[bot.info.username]: {
-			'bot-test': {
+			'ekkis': {
 				'dialogue': []
+			},
+			null: {
+				bot: {
+					username: 'test_bot'
+				}
 			}
 		}
 	},
@@ -79,7 +84,7 @@ function test(uri, cmd, res) {
 		body: {
 			message: {
 				chat: {id: '1', type: 'private'},
-				from: {username: 'bot-test'},
+				from: {username: 'ekkis'},
 				text: cmd
 			}
 		}
@@ -93,7 +98,7 @@ function equal(cmd, res) {
 	var expected =  {
 		chat_id: '1',
 		chat_type: 'private',
-		username: 'bot-test',
+		username: 'ekkis',
 		parse_mode: 'Markdown',
 		cmd: '',
 		args: '',
@@ -102,7 +107,7 @@ function equal(cmd, res) {
 	}
 
 	var i = 0;
-	return (p, msg) => {
+	return (key, msg, p) => {
 		// removes functions 
 		msg = JSON.parse(JSON.stringify(msg));
 		if (!('photo' in msg)) msg.photo = undefined;

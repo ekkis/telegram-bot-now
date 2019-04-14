@@ -188,7 +188,7 @@ var self = module.exports = {
         }
     },
     info: async (key) => {
-        return self.get(key, 'getMe').catch(console.log)
+        return self.get(key, 'getMe');
     },
     bind: (info) => {
 // var key = self.server.info.key;
