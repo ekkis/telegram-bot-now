@@ -155,7 +155,7 @@ var self = module.exports = {
         if (p instanceof Promise) ret = p.then(() => ret);
         return ret;
     },
-    msg: (msg) => {
+    msg: (key, msg) => {
         if (!msg) msg = this;
         if (!msg.text) return;
         if (!msg.method) msg.method = 'sendMessage';
@@ -169,7 +169,7 @@ var self = module.exports = {
     
         var ret = Promise.resolve(true);
         for (var i = 0; i < msgs.length; i++) {
-            ret = self.post(Object.assign({}, msg, msgs[i]), ret)
+            ret = self.post(key, Object.assign({}, msg, msgs[i]), ret)
                 .then(res => {
                     self.debug('OUTPUT', msg);
                     if (!res.ok) self.err({res, msg});
