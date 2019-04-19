@@ -74,11 +74,11 @@ var self = module.exports = {
 					route = routes[route] || routes['undefined'];
 					m.text = await route(m, {req, dialogue});
 				}
-				opts.state.save(bot.username, m.username, 'dialogue', dialogue);
+				await opts.state.save(
+					bot.username, m.username, 'dialogue', dialogue
+				);
 	
-				// requests coming in via url cannot post to a channel
-
-				if (m.chat_id) await utils.msg(bot.key, m);
+				return utils.msg(bot.key, m);
 			} catch(err) {
 				// transmit the error
 				utils.err(err);
