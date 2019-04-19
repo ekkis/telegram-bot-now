@@ -101,14 +101,43 @@ var self = module.exports = {
         if (!Array.isArray(ret)) ret = [ret];
         return ret;
     },
-    html: {
-        table: (ths, trs) => {
-            for (var i = 0; i < trs.length; i++) {
-                if (!trs[i].match(/</))
-                    trs[i] = '<tr><td>'+ trs[i].replace(/\|/g, '</td><td>') + '</td></tr>'
+    msg: (key, msg) => {
+        if (!msg) msg = this;
+        if (!msg.text) return;
+        if (!msg.chat_id) return;
+        if (!msg.method) msg.method = 'sendMessage';
+    
+        var msgs = (typeof msg.text == 'string') ? [msg.text] : msg.text;
+        var splitter = o => typeof o == 'string' ? o.split(/^\s*---/m) : o;
+        msgs = msgs.map(splitter).flat()
+            .map(o => typeof o == 'string' ? {text: o.trimln()} : o)
+            .map(vars)
+            .map(keyboards)
+            .map(attachment);
+        msg.text = '';
+    
+        var ret = Promise.resolve(true);
+        for (let i = 0; i < msgs.length; i++) {
+            ret = ret.then(() => self.post(key, Object.assign({}, msg, msgs[i])));
+        }
+        return ret;
+
+        function vars(o) {
+            if (o.vars) o.text = o.text.sprintf(o.vars)
+            return o;
+        }
+        function keyboards(o) {
+            if (o.choices) msg.keyboard(o.choices)
+            return o;
+        }
+        function attachment(o) {
+            if (o.photo) return {
+                method: 'sendPhoto', photo: o.photo
             }
-            ths = '<tr><th>' + ths.replace(/\|/g, '</th><th>') + '</th></tr>';
-            return '<table>' + ths +  trs + '</table>';
+            if (o.document) return {
+                method: 'sendDocument', document: o.document
+            }
+            return o;
         }
     },
     help: (o, s) => {
@@ -162,45 +191,6 @@ var self = module.exports = {
             if (!res.ok) self.err({res, msg});
             return res;
         });
-    },
-    msg: (key, msg) => {
-        if (!msg) msg = this;
-        if (!msg.text) return;
-        if (!msg.chat_id) return;
-        if (!msg.method) msg.method = 'sendMessage';
-    
-        var msgs = (typeof msg.text == 'string') ? [msg.text] : msg.text;
-        var splitter = o => typeof o == 'string' ? o.split(/^\s*---/m) : o;
-        msgs = msgs.map(splitter).flat()
-            .map(o => typeof o == 'string' ? {text: o.trimln()} : o)
-            .map(vars)
-            .map(keyboards)
-            .map(attachment);
-        msg.text = '';
-    
-        var ret = Promise.resolve(true);
-        for (let i = 0; i < msgs.length; i++) {
-            ret = ret.then(() => self.post(key, Object.assign({}, msg, msgs[i])));
-        }
-        return ret;
-
-        function vars(o) {
-            if (o.vars) o.text = o.text.sprintf(o.vars)
-            return o;
-        }
-        function keyboards(o) {
-            if (o.choices) msg.keyboard(o.choices)
-            return o;
-        }
-        function attachment(o) {
-            if (o.photo) return {
-                method: 'sendPhoto', photo: o.photo
-            }
-            if (o.document) return {
-                method: 'sendDocument', document: o.document
-            }
-            return o;
-        }
     },
     info: async (key) => {
         return self.get(key, 'getMe');
