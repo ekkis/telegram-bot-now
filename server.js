@@ -78,7 +78,7 @@ var self = module.exports = {
 					bot.username, m.username, 'dialogue', dialogue
 				);
 	
-				return utils.msg(bot.key, m);
+				await utils.msg(bot.key, m);
 			} catch(err) {
 				// transmit the error
 				utils.err(err);
