@@ -95,7 +95,7 @@ var self = module.exports = {
         var ret = MSG[[state.route, step.nm].join('_').uc()];
         if (!ret) die('No message for step [' + step.nm + ']');
         if (typeof ret == 'string') ret = { 
-            message: ret, vars: isobj(val) ? val : state.rsp.last()
+            text: ret, vars: isobj(val) ? val : state.rsp.last()
         };
         if (val.choices) ret.choices = val.choices;
         if (!Array.isArray(ret)) ret = [ret];
@@ -107,7 +107,7 @@ var self = module.exports = {
         if (!msg.chat_id) return;
         if (!msg.method) msg.method = 'sendMessage';
     
-        var msgs = (typeof msg.text == 'string') ? [msg.text] : msg.text;
+        var msgs = Array.isArray(msg.text) ? msg.text : [msg.text];
         var splitter = o => typeof o == 'string' ? o.split(/^\s*---/m) : o;
         msgs = msgs.map(splitter).flat()
             .map(o => typeof o == 'string' ? {text: o.trimln()} : o)
@@ -179,7 +179,7 @@ var self = module.exports = {
         return fetch(self.tg(key, cmd))
             .then(res => res.json());
     },
-    post: (key, msg, p) => {
+    post: (key, msg) => {
 		return fetch(self.tg(key, msg.method), {
 			method: 'post',
 			headers: {'Content-Type': 'application/json'},
