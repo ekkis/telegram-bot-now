@@ -72,7 +72,8 @@ var self = module.exports = {
 				}
 				else {
 					route = routes[route] || routes['undefined'];
-					m.text = await route(m, {req, dialogue});
+					m.text = await route(m, {req, dialogue, bot: self});
+					if (!m.text) m.text = self.MSG[route.uc()];
 				}
 				await opts.state.save(
 					bot.username, m.username, 'dialogue', dialogue
