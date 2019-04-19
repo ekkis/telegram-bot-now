@@ -81,19 +81,25 @@ var self = module.exports = {
 
         // if no messages provided it's up to the caller
         // to generate them
+
         if (!MSG) return {nm: step.nm, val};
+
+        // the last step in the dialogue has been reached
+        // so we clear state as an indication to caller
+
+        if (steps.length == state.rsp.length) o.state = undefined;
 
         // messages conform to a pattern: name of route, name of
         // step, joined with underscores, all uppercase
 
         var ret = MSG[[state.route, step.nm].join('_').uc()];
         if (!ret) die('No message for step [' + step.nm + ']');
-		if (typeof ret == 'object') {
-			msg.keyboard(val.choices || ret.choices);
-			ret = ret.message;
-        }        
-        if (steps.length == state.rsp.length) o.state = undefined;
-		return ret.sprintf(typeof val == 'object' ? val : state.rsp.last());
+        if (typeof ret == 'string') ret = { 
+            message: ret, vars: isobj(val) ? val : state.rsp.last()
+        };
+        if (val.choices) ret.choices = val.choices;
+        if (!Array.isArray(ret)) ret = [ret];
+        return ret;
     },
     html: {
         table: (ths, trs) => {
@@ -145,38 +151,47 @@ var self = module.exports = {
             .then(res => res.json());
     },
     post: (key, msg, p) => {
-		var ret = fetch(self.tg(key, msg.method), {
+		return fetch(self.tg(key, msg.method), {
 			method: 'post',
 			headers: {'Content-Type': 'application/json'},
 			body: JSON.stringify(msg)
-		})
-        .then(res => res.json());
-        
-        if (p instanceof Promise) ret = p.then(() => ret);
-        return ret;
+        })
+        .then(res => res.json())
+        .then(res => {
+            self.debug('OUTPUT', msg);
+            if (!res.ok) self.err({res, msg});
+            return res;
+        });
     },
     msg: (key, msg) => {
         if (!msg) msg = this;
         if (!msg.text) return;
+        if (!msg.chat_id) return;
         if (!msg.method) msg.method = 'sendMessage';
     
         var msgs = (typeof msg.text == 'string') ? [msg.text] : msg.text;
         var splitter = o => typeof o == 'string' ? o.split(/^\s*---/m) : o;
         msgs = msgs.map(splitter).flat()
             .map(o => typeof o == 'string' ? {text: o.trimln()} : o)
+            .map(vars)
+            .map(keyboards)
             .map(attachment);
         msg.text = '';
     
         var ret = Promise.resolve(true);
-        for (var i = 0; i < msgs.length; i++) {
-            ret = self.post(key, Object.assign({}, msg, msgs[i]), ret)
-                .then(res => {
-                    self.debug('OUTPUT', msg);
-                    if (!res.ok) self.err({res, msg});
-                });
+        for (let i = 0; i < msgs.length; i++) {
+            ret = ret.then(() => self.post(key, Object.assign({}, msg, msgs[i])));
         }
         return ret;
-    
+
+        function vars(o) {
+            if (o.vars) o.text = o.text.sprintf(o.vars)
+            return o;
+        }
+        function keyboards(o) {
+            if (o.choices) msg.keyboard(o.choices)
+            return o;
+        }
         function attachment(o) {
             if (o.photo) return {
                 method: 'sendPhoto', photo: o.photo
@@ -191,18 +206,17 @@ var self = module.exports = {
         return self.get(key, 'getMe');
     },
     bind: (info) => {
-// var key = self.server.info.key;
         if (!info.url) die('No Telegram bot url to bind to');
         Object.assign(self.server.info, info);
 
         var bot;
         return self.info(info.key).then(res => {
-            if (!res.ok) {
+            if (res.ok) bot = res.result;
+            else {
                 var msg = 'Telegram bot API key'
                 msg += ' [Code: ' + res.error_code + ' / ' + res.description + ']';
                 die(msg);
             }
-            bot = res.result;
             return self.post(info.key, {
                 method: 'setWebhook',
                 url: info.url + '?bot=' + bot.username
@@ -230,4 +244,8 @@ jsp.install();
 
 function die(s) {
     throw new Error(s);
+}
+
+function isobj(o) {
+    return typeof o == 'object' && !Array.isArray(o);
 }
