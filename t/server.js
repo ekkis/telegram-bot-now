@@ -31,6 +31,9 @@ var routes = {
 
 		return ['first', 'second']
 	},
+	sprintf: () => {
+		return {text: 'my %{cardinal} fill-in', vars: {cardinal: 'first'}};
+	},
 	chat: async (m, meta) => {
 		var steps = [
 			{nm: 'initial'},
@@ -77,7 +80,35 @@ var state = {
 // support functions
 
 function test(uri, cmd, res) {
-	bot.utils.post = equal(cmd, res)
+	var ret, i = 0;
+	var expected =  {
+		chat_id: '1',
+		chat_type: 'private',
+		username: 'ekkis',
+		parse_mode: 'Markdown',
+		cmd: '',
+		args: '',
+		photo: undefined,
+		method: 'sendMessage'
+	}
+
+	bot.utils.post = (key, msg) => {
+		// removes functions 
+		msg = JSON.parse(JSON.stringify(msg));
+		if (!('photo' in msg)) msg.photo = undefined;
+		expected.cmd = ''; expected.args = cmd
+		if (cmd.startsWith('/')) {
+			var x; [x, expected.cmd, expected.args]
+				= cmd.match(/^\/(\w+)(.*)$/).trim()
+		}
+		expected.text = Array.isArray(res) ? res[i++] : res;
+		delete msg.vars;
+		ret = Object.assign({}, msg);
+
+		msg.ok = true
+		return Promise.resolve(msg)
+	}
+
 	return request({
 		uri, method: 'POST',
 		json: true, // Automatically stringifies the body to JSON
@@ -92,36 +123,9 @@ function test(uri, cmd, res) {
 	.catch(e => {
 		console.log('REQUEST FAIL', e)	
 	})
-}
-
-function equal(cmd, res) {
-	var expected =  {
-		chat_id: '1',
-		chat_type: 'private',
-		username: 'ekkis',
-		parse_mode: 'Markdown',
-		cmd: '',
-		args: '',
-		photo: undefined,
-		method: 'sendMessage'
-	}
-
-	var i = 0;
-	return (key, msg, p) => {
-		// removes functions 
-		msg = JSON.parse(JSON.stringify(msg));
-		if (!('photo' in msg)) msg.photo = undefined;
-		expected.cmd = ''; expected.args = cmd
-		if (cmd.startsWith('/')) {
-			var x; [x, expected.cmd, expected.args]
-				= cmd.match(/^\/(\w+)(.*)$/).trim()
-		}
-		expected.text = Array.isArray(res) ? res[i++] : res;
-		assert.deepEqual(msg, expected)
-
-		msg.ok = true
-		return p.then(() => msg)
-	}
+	.then(() => {
+		return assert.deepEqual(ret, expected)
+	})
 }
 
 // run tests
@@ -160,6 +164,9 @@ describe('Server routes', () => {
 	})
 	it('handles arrays', async () => {
 		return test(url, '/array', ['first', 'second'])
+	})
+	it('handles variable replacements', () => {
+		return test(url, '/sprintf', 'my first fill-in')
 	})
 	describe('Dialogue support', () => {
 		it('initial step', () => {
