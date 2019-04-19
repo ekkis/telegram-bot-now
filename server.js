@@ -71,8 +71,8 @@ var self = module.exports = {
 					m.text = self.MSG.CANCELLED;
 				}
 				else {
-					route = routes[route] || routes['undefined'];
-					m.text = await route(m, {req, dialogue, bot: self});
+					let fn = routes[route] || routes['undefined'];
+					m.text = await fn(m, {req, dialogue, bot: self});
 					if (!m.text) m.text = self.MSG[route.uc()];
 				}
 				await opts.state.save(
