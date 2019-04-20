@@ -64,21 +64,22 @@ var self = module.exports = {
 				// by dialogues.  if none specified an 'undefined' route
 				// is expected to be defined in the customer object
 
-				var dialogue = await opts.state.get(
+				var meta = {req, bot: self};
+				meta.dialogue = await opts.state.get(
 					bot.username, m.username, 'dialogue'
 				);
-				var route = m.cmd || dialogue.route;
+				var route = m.cmd || meta.dialogue.route;
 				if (route.match(/^cancel$/i)) {
-					dialogue = undefined;
+					meta.dialogue = undefined;
 					m.text = self.MSG.CANCELLED;
 				}
 				else {
 					let fn = routes[route] || routes['undefined'];
-					m.text = await fn(m, {req, dialogue, bot: self});
+					m.text = await fn(m, meta);
 					if (!m.text) m.text = self.MSG[route.uc()];
 				}
 				await opts.state.save(
-					bot.username, m.username, 'dialogue', dialogue
+					bot.username, m.username, 'dialogue', meta.dialogue
 				);
 	
 				await utils.msg(bot.key, m);
