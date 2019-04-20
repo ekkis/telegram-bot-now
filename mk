@@ -267,9 +267,9 @@ msg_keyboardToTel() {
 [ "$1" == "--help" ] && {
 	help
 }
-[ -z "$TELEGRAM_API_KEY" ] && {
+[ -z "$TELEGRAM_BOT_KEY" ] && {
 	echo "Telegram API not set.  Please set the value in your local environment with:"
-	echo "export TELEGRAM_API_KEY=xxxxxxxx"
+	echo "export TELEGRAM_BOT_KEY=xxxxxxxx"
 	exit 1
 }
 [ ! -z "$1" ] && {
