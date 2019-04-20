@@ -63,91 +63,107 @@ describe('Parse', () => {
                 {nm: 'metric', valid:/^\w+\/\w+$/, x: 'uc', optional: true}
             ]
         }
-        it('simple', () => {
-            var actual = utils.parse('10 eth for btc', cd)
+        it('simple', async () => {
+            var actual = await utils.parse('10 eth for btc', cd)
             var expected = {qty: 10, sell: 'ETH', buy: 'BTC'}
             assert.deepEqual(actual, expected)
         })
-        it('bad quantity', () => {
+        it('bad quantity', async () => {
             var res = {qty: 10, sell: 'ETH', buy: 'BTC'}
-            var f = () => utils.parse('10. eth for btc', cd);
-            assert.throws(f, {message: 'PARSE_FAIL', field: 'qty'})
+            try { await utils.parse('10. eth for btc', cd) }
+            catch(e) {
+                assert.deepEqual(e, {message: 'PARSE_FAIL', field: 'qty'})
+            }
         })
-        it('float quantity', () => {
-            var actual = utils.parse('10.02 eth for btc', cd)
+        it('float quantity', async () => {
+            var actual = await utils.parse('10.02 eth for btc', cd)
             var expected = {qty: 10.02, sell: 'ETH', buy: 'BTC'}
             assert.deepEqual(actual, expected)
         })
-        it('price', () => {
-            var actual = utils.parse('10 eth for btc @ 23', cd)
+        it('price', async () => {
+            var actual = await utils.parse('10 eth for btc @ 23', cd)
             var expected = {qty: 10, sell: 'ETH', buy: 'BTC', price: 23}
             assert.deepEqual(actual, expected)
         })
-        it('bad price', () => {
+        it('bad price', async () => {
             var res = {qty: 10, sell: 'ETH', buy: 'BTC'}
-            var f = () => utils.parse('10 eth for btc @ 23.', cd)
-            assert.throws(f, {message: 'PARSE_FAIL', field: 'price'})
+            try { await utils.parse('10 eth for btc @ 23.', cd) }
+            catch(e) {
+                assert.deepEqual(e, {message: 'PARSE_FAIL', field: 'price'})
+            }
         })
-        it('decimal price', () => {
-            var actual = utils.parse('10 eth for btc @ 23.01', cd)
+        it('decimal price', async () => {
+            var actual = await utils.parse('10 eth for btc @ 23.01', cd)
             var expected = {qty: 10, sell: 'ETH', buy: 'BTC', price: 23.01}
             assert.deepEqual(actual, expected)
         })
-        it('at price', () => {
-            var actual = utils.parse('10 eth for btc at 23', cd)
+        it('at price', async () => {
+            var actual = await utils.parse('10 eth for btc at 23', cd)
             var expected = {qty: 10, sell: 'ETH', buy: 'BTC', price: 23}
             assert.deepEqual(actual, expected)
         })
-        it('for for', () => {
-            var actual = utils.parse('10 eth for for btc at 23', cd)
+        it('for for', async () => {
+            var actual = await utils.parse('10 eth for for btc at 23', cd)
             var expected = {qty: 10, sell: 'ETH', buy: 'BTC', price: 23}
             assert.deepEqual(actual, expected)
         })
-        it('price with cross', () => {
-            var actual = utils.parse('10 eth for btc @ 23 eth/btc', cd)
+        it('price with cross', async () => {
+            var actual = await utils.parse('10 eth for btc @ 23 eth/btc', cd)
             var expected = {qty: 10, sell: 'ETH', buy: 'BTC', price: 23, metric: 'ETH/BTC'}
             assert.deepEqual(actual, expected)
         })
-        it('price with cross - no space', () => {
+        it('price with cross - no space', async () => {
             var res = {qty: 10, sell: 'ETH', buy: 'BTC', price: 23, metric: 'ETH/BTC'}
-            var f = () => utils.parse('10 eth for btc @ 23eth/btc', cd)
-            assert.throws(f, {message: 'PARSE_FAIL', field: 'price'})
+            try { await utils.parse('10 eth for btc @ 23eth/btc', cd) }
+            catch(e) {
+                assert.deepEqual(e, {message: 'PARSE_FAIL', field: 'price'})
+            }
         })
-        it('price with single unit', () => {
+        it('price with single unit', async () => {
             var res = {qty: 10, sell: 'ETH', buy: 'BTC', price: 23, metric: 'ETH'}
-            var f = () => utils.parse('10 eth for btc @ 23 eth', cd)
-            assert.throws(f, {message: 'PARSE_FAIL', field: 'metric'})
+            try { await utils.parse('10 eth for btc @ 23 eth', cd) }
+            catch(e) {
+                assert.deepEqual(e, {message: 'PARSE_FAIL', field: 'metric'})
+            }
         })
-        it('regular expression for clean', () => {
+        it('regular expression for clean', async () => {
             cd.clean = /for|at|@/ig;
-            var actual = utils.parse('10 eth for btc', cd)
+            var actual = await utils.parse('10 eth for btc', cd)
             var expected = {qty: 10, sell: 'ETH', buy: 'BTC'}
             assert.deepEqual(actual, expected)
         })
     })
     describe('Dialogue mode', () => {
         var FAIL = {message: 'PARSE_FAIL', field: 'tst'}
-        it('valid input accepted', () => {
+        it('valid input accepted', async () => {
             var v = '200-3'
-            var actual = utils.parse(v, {fields: {nm: 'tst', valid: /-/}})
+            var actual = await utils.parse(v, {fields: {nm: 'tst', valid: /-/}})
             assert.equal(actual, v);
         })
-        it('invalid input rejected', () => {
-            var f = () => utils.parse('200/3', {fields: {nm: 'tst', valid: /-/}})
-            assert.throws(f, FAIL);
+        it('invalid input rejected', async () => {
+            try {
+                await utils.parse('200/3', {fields: {nm: 'tst', valid: /-/}})
+            }
+            catch(e) {
+                assert.deepEqual(e, FAIL)
+            }
         })
-        it('valid function accepts', () => {
+        it('valid function accepts', async () => {
             var v = '200/3'
             var validate = s => s == v
-            var actual = utils.parse(v, {fields: {nm: 'tst', valid: validate}})
+            var actual = await utils.parse(v, {fields: {nm: 'tst', valid: validate}})
             assert.equal(actual, v)
         })
-        it('valid function rejects', () => {
+        it('valid function rejects', async () => {
             var validate = s => s != '200/3'
-            var f = () => utils.parse('200/3', {fields: {nm: 'tst', valid: validate}})
-            assert.throws(f, FAIL)
+            try {
+                await utils.parse('200/3', {fields: {nm: 'tst', valid: validate}})
+            }
+            catch(e) {
+                assert.deepEqual(e, FAIL)
+            }
         })
-        it('post function supported', () => {
+        it('post function supported', async () => {
             var v = '200/3'
             var fd = {nm: 'tst', 
                 valid: s => s == v, 
@@ -155,7 +171,7 @@ describe('Parse', () => {
                     assert.equal(actual, v)
                 }
             }
-            utils.parse(v, {fields: fd})
+            await utils.parse(v, {fields: fd})
         })
     })
 })

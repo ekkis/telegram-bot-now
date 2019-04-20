@@ -40,16 +40,14 @@ var routes = {
 			{nm: 'interim', post: s => ({name: s})},
 			{nm: 'final'}
 		];
-		return bot.utils.dialogue({
-			msg: m, steps, 
-			state: meta.dialogue,
-			MSG: routes.MSG
-		})
+		return bot.utils.dialogue(m, steps, meta, {MSG: routes.MSG.CHAT})
 	},
 	MSG: {
-		CHAT_INITIAL: 'Greetings. What\'s your name?',
-		CHAT_INTERIM: 'Hello %{name}',
-		CHAT_FINAL: 'Good bye'
+		CHAT: {
+			INITIAL: 'Greetings. What\'s your name?',
+			INTERIM: 'Hello %{name}',
+			FINAL: 'Good bye'
+		}
 	}
 }
 
@@ -170,14 +168,14 @@ describe('Server routes', () => {
 	})
 	describe('Dialogue support', () => {
 		it('initial step', () => {
-			return test(url, '/chat', routes.MSG.CHAT_INITIAL)
+			return test(url, '/chat', routes.MSG.CHAT.INITIAL)
 		})
 		it('interim step', () => {
 			var name = 'ziggy';
-			return test(url, name, routes.MSG.CHAT_INTERIM.sprintf({name}))
+			return test(url, name, routes.MSG.CHAT.INTERIM.sprintf({name}))
 		})
 		it('final step', () => {
-			return test(url, 'whatever!', routes.MSG.CHAT_FINAL)
+			return test(url, 'whatever!', routes.MSG.CHAT.FINAL)
 		})
 	})
 })

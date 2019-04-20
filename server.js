@@ -15,14 +15,16 @@ var self = module.exports = {
 	},
 	server: (routes, opts) => {
 		utils.server = self;
+
+		// coalesce messages from multiple sources
+		Object.assign(self.MSG, routes.MSG, opts.MSG);
+
+		// when binding information is given set up a webhook
 		if (opts.bind) utils.bind(opts.bind).catch(die).then(res => {
 			self.info.username = res.username;
 			self.info.name = res.first_name;
 			opts.state.save(res.username, null, 'bot', self.info);
 		});
-
-		// sanitise messages
-		if (!routes.MSG || typeof routes.MSG != "object") routes.MSG = {};
 
 		// default messages and routes
 		var defaults = {
@@ -82,13 +84,13 @@ var self = module.exports = {
 				await utils.msg(bot.key, m);
 			} catch(err) {
 				// transmit the error
-				utils.err(err);
+				utils.err(self.MSG[err.message] || err);
 	
 				// if a message could be produced, notify the user/group
 				if (!m) return;
 				try {
-					let s = routes.MSG[err.message] || "";
-					m.text = s || routes.MSG['FAIL'] || self.MSG.FAIL;
+					let s = self.MSG[err.message] || "";
+					m.text = s || self.MSG.FAIL;
 					await utils.msg(m);	
 				}
 				catch(err) {

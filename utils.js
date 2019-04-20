@@ -13,7 +13,7 @@ var xf = {
 // utilities
 
 var self = module.exports = {
-    parse: (s, desc) => {
+    parse: async (s, desc) => {
         var m = s;
         if (typeof s == 'object') s = s.args;
         if (desc.clean) {
@@ -36,7 +36,7 @@ var self = module.exports = {
             if (f.valid) {
                 let vt = typeof f.valid;
                 let ok = (vt == 'function')
-                    ? f.valid(r[i], m)
+                    ? await f.valid(r[i], m)
                     : (f.valid instanceof RegExp) ? !!r[i].match(f.valid)
                     : false;
                 if (!ok) {
@@ -62,8 +62,8 @@ var self = module.exports = {
         var k = Object.keys(ret);
         return k.length == 1 ? ret[k[0]] : ret;
     },
-    dialogue: async (o) => {
-        var {msg, steps, state, opts, MSG} = o;
+    dialogue: async (msg, steps, meta, opts) => {
+        var state = meta.dialogue;
         if (msg.cmd) {
             state.route = msg.cmd;
             state.rsp = [];
@@ -71,7 +71,7 @@ var self = module.exports = {
 
         var step = steps[state.rsp.length];
         opts = Object.assign({fields: step, throwPrefix: state.route}, opts)
-		var val = self.parse(msg, opts);
+		var val = await self.parse(msg, opts);
 		state.rsp.push({nm: step.nm, val});
 
 		if (step.post) {
@@ -79,23 +79,20 @@ var self = module.exports = {
             if (post) val = post;
         }
 
-        // if no messages provided it's up to the caller
-        // to generate them
-
-        if (!MSG) return {nm: step.nm, val};
-
         // the last step in the dialogue has been reached
         // so we clear state as an indication to caller
 
-        if (steps.length == state.rsp.length) o.state = undefined;
+        if (steps.length == state.rsp.length) meta.dialogue = undefined;
 
-        // messages conform to a pattern: name of route, name of
-        // step, joined with underscores, all uppercase
+        // if no messages provided it's up to the caller
+        // to generate them
 
-        var ret = MSG[[state.route, step.nm].join('_').uc()];
+        if (!opts.MSG) return {nm: step.nm, val};
+
+        var ret = opts.MSG[step.nm.uc()];
         if (!ret) die('No message for step [' + step.nm + ']');
         if (typeof ret == 'string') ret = { 
-            text: ret, vars: isobj(val) ? val : state.rsp.last()
+            text: ret, vars: val.isObj() ? val : state.rsp.last()
         };
         if (val.choices) ret.choices = val.choices;
         if (!Array.isArray(ret)) ret = [ret];
@@ -107,13 +104,13 @@ var self = module.exports = {
         if (!msg.chat_id) return;
         if (!msg.method) msg.method = 'sendMessage';
     
-        var msgs = Array.isArray(msg.text) ? msg.text : [msg.text];
-        var splitter = o => typeof o == 'string' ? o.split(/^\s*---/m) : o;
-        msgs = msgs.map(splitter).flat()
-            .map(o => typeof o == 'string' ? {text: o.trimln()} : o)
+        var msgs = (Array.isArray(msg.text) ? msg.text : [msg.text])
+            .map(objs)
+            .map(splitter)
+            .flat()
             .map(vars)
             .map(keyboards)
-            .map(attachment);
+            .map(attachments);
         msg.text = '';
     
         var ret = Promise.resolve(true);
@@ -122,6 +119,13 @@ var self = module.exports = {
         }
         return ret;
 
+        function objs(o) {
+            return typeof o == 'string' ? {text: o} : o;
+        }
+        function splitter(o) {
+            var r = o.text.split(/^\s*---/m);
+            return r.map(x => Object.assign({}, o, {text: x.trimln()}));
+        }
         function vars(o) {
             if (o.vars) o.text = o.text.sprintf(o.vars)
             return o;
@@ -130,7 +134,7 @@ var self = module.exports = {
             if (o.choices) msg.keyboard(o.choices)
             return o;
         }
-        function attachment(o) {
+        function attachments(o) {
             if (o.photo) return {
                 method: 'sendPhoto', photo: o.photo
             }
@@ -234,8 +238,4 @@ jsp.install();
 
 function die(s) {
     throw new Error(s);
-}
-
-function isobj(o) {
-    return typeof o == 'object' && !Array.isArray(o);
 }
