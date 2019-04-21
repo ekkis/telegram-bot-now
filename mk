@@ -100,10 +100,10 @@ msg() {
 
 bind() {
 	[ "$1" == "rm" ] && {
-		fetch deleteWebhook -t; exit
+		fetch "/deleteWebhook" -t; return
 	}
 	[ "$1" == "info" ] && {
-		fetch getWebhookInfo -t; exit
+		fetch "/getWebhookInfo" -t; return
 	}
 	[ -z "$1" ] && {
 		echo "No bot name specified for the binding!"
@@ -111,15 +111,15 @@ bind() {
 	}
 	#d='{"url": "%s", "allowed_updates": ["message", "channel_post"]}'
 	d=$(printf '{"url": "%s"}' "$(cat .url)/server.js?bot=$1")
-	fetch setWebhook -t -d "$d" $(hdr -j)
+	fetch "/setWebhook" -t -d "'$d'" $(hdr -j)
 }
 
 clearqueue() {
-	fetch deleteWebhook
-	id=$(fetch getUpdates -t 2>/dev/null |jq .result[-1].update_id)
+	bind rm
+	id=$(fetch "/getUpdates" -t 2>/dev/null |jq .result[-1].update_id)
 	id=$(echo "$id+1" |bc)
-	fetch getUpdates -t "-F 'offset=$id'"
-	bind
+	fetch "/getUpdates" -t "-F 'offset=$id'"
+	bind $TELEGRAM_BOT_USERNAME
 }
 
 secret() {
@@ -171,7 +171,7 @@ fetch() {
 	}
 	url="curl $@ $(url $srv)"
 	[ ! -z "$cmd" ] && url="$url$cmd"
-	[ "$DEBUG" == "Y" ] && echo $url
+	[ "$DEBUG" == "Y" ] && echo $url > /dev/stderr
 	eval $url
 	echo ""
 }
@@ -278,4 +278,6 @@ msg_keyboardToTel() {
 
 [ -f .url ] && now rm --yes $(cat .url)
 now > .url
-bind $TELEGRAM_BOT_USERNAME
+
+# latest version auto-binds
+# bind $TELEGRAM_BOT_USERNAME
