@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const jsp = require('js-prototype-lib');
+const njsutil = require('util');
 
 // convenience transform functions
 
@@ -191,8 +192,8 @@ var self = module.exports = {
         })
         .then(res => res.json())
         .then(res => {
-            self.debug('OUTPUT', msg);
-            if (!res.ok) self.err({res, msg});
+            self.debug('OUTPUT', {msg, res});
+            if (!res.ok) self.err({msg, res});
             return res;
         });
     },
@@ -226,11 +227,10 @@ var self = module.exports = {
     },
     debug: (title, obj) => {
         if (!self.server.DEBUG) return;
-        console.log(title);					// eslint-disable-line no-console
-        console.dir(obj, {depth: null});	// eslint-disable-line no-console
+        console.log(title, njsutil.inspect(obj, {depth: null}));    // eslint-disable-line no-console
     },
     err: (e) => {
-        console.error(e);                   // eslint-disable-line no-console
+        console.error(e);   // eslint-disable-line no-console
     }
 }
 
