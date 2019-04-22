@@ -5,6 +5,7 @@ const request = require('request-promise');
 const bot = require('../server');
 
 const DEBUG = false;
+const username = 'ekkis'
 bot.info.username = 'test_bot'
 
 // set up base routes
@@ -54,7 +55,7 @@ var routes = {
 var state = {
 	cache: {
 		[bot.info.username]: {
-			'ekkis': {
+			[username]: {
 				'dialogue': []
 			},
 			null: {
@@ -82,7 +83,7 @@ function test(uri, cmd, res) {
 	var expected =  {
 		chat_id: '1',
 		chat_type: 'private',
-		username: 'ekkis',
+		username,
 		parse_mode: 'Markdown',
 		cmd: '',
 		args: '',
@@ -113,7 +114,7 @@ function test(uri, cmd, res) {
 		body: {
 			message: {
 				chat: {id: '1', type: 'private'},
-				from: {username: 'ekkis'}, text: cmd
+				from: {username}, text: cmd
 			}
 		}
 	})

@@ -25,17 +25,49 @@ thus grab our skeleton code like this:
 ```
 $ ./mk scaffold
 ```
-If for whatever reason the link is not there you can create it like this:
+The main entry point for your server is named `server.js` so if your current `package.json`
+is using `index.js` you may want to change the line below (or rename the file, but if you do
+that don't forget to also change the `now.json`):
+```json
+  "main": "server.js",
+```
+Additionally, you may want to have the following as well:
+```json
+"scripts": {
+    "start": "micro",
+    "dev": "micro-dev",
+    "debug": "node --inspect node_modules/.bin/micro-dev"
+},
+```
+which will allow you to start your server locally (use `npm run dev` in development
+so use the `micro-dev` engine), and if you use Microsoft VS Code, you can create a debug
+configuration (in your `.vscode/launch.json`) like this, to allow debugging:
+```json
+{
+    "type": "node",
+    "request": "launch",
+    "name": "Launch via NPM",
+    "runtimeExecutable": "npm",
+    "runtimeArgs": [
+        "run-script",
+        "debug"
+    ],
+    "port": 9229,
+    "envFile": "${workspaceFolder}/.env"
+}
+```
+Finally, if for whatever reason the symlink to `mk` was not properly created, you can create
+it by hand like this:
 ```
 ln -s node_modules/telegram-bot-now/mk
 ```
 > Please note: the make utility will not work on Windows.  Users of that operating
 > system are encouraged to install Cygwin or another bash shell available
 
-## Deploy
+## Configure
 
-To deploy your bot you'll first need to edit your environment file `.env` with the
-needed information.  the TELEGRAM_BOT_KEY is the value Bot Father gives you for your
+Before deploying your bot you'll first need to edit your environment file `.env` with the
+needed information.  The TELEGRAM_BOT_KEY is the value the Bot Father gives you for your
 bot, and the _URL will be your Now deployment alias.  You'll need to create an account
 on Now first (the account name is included in the url) and the project name is the name
 of the directory where your project resides
@@ -47,14 +79,17 @@ $ ./mk secrets
 which will upload the secrets to the Now environment.  If you need to run your bot locally
 (for debugging), you can:
 ```
+$ npm install --save-dev micro-dev # in case you don't have it installed
 $ eval "$(./mk env)"
 $ npm run dev
 ```
 Your environment file is also compatible with the Microsoft VS Code debugger.  Just make sure
-your `./.vscode/launch.json` file contains the following line:
+your `.vscode/launch.json` file contains the following line (as previously shown):
 ```json
     "envFile": "${workspaceFolder}/.env"
 ```
+
+## Deploy
 
 Finally, you can create a Now deployment very simply:
 ```
