@@ -193,7 +193,7 @@ var self = module.exports = {
         .then(res => res.json())
         .then(res => {
             if (res.ok) self.debug('POST', {msg, res});
-            else die({msg, res});
+            else throw {msg, res};
             return res;
         })
         .catch(e => {
