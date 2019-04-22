@@ -98,7 +98,7 @@ msg() {
 		die "No Telegram bot image ID available!"
 	}
 
-	d=$(msg_data $srv $chat_id $from "$cmd" $type "$args")
+	d=$(msg_data $srv "$cmd" $chat_id $from $type "$args")
 	if [ "$srv" == "-t" ]; then
 		[ "$type" == "-p" ] && method="sendPhoto" || method="sendMessage"
 		fetch $method $srv -d "'$d'" $(hdr -j)
@@ -256,17 +256,15 @@ fetch() {
 }
 
 msg_data() {
-	srv=$1; chat_id=$2; from=$3; cmd=$4; type=$5; args=$6
+	srv=$1; cmd=$2; chat_id=${3:-0}; from=${4:-test_user}; type=$5; args=$6
 	
-	if [ "$type" == "-p" ]
-	then
+	if [ "$type" == "-p" ];	then
 		if [ "$srv" == "-t" ]; then
 			printf "$(msg_photoToTel)" $chat_id
 		else
 			printf "$(msg_photoToBot)" $chat_id $from
 		fi
-	elif [ "$type" == "-k" ]
-	then
+	elif [ "$type" == "-k" ]; then
 		printf "$(msg_keyboardToTel)" $chat_id "$args"
 	else
 		f=$([ "$srv" == "-t" ] && msg_textToTel || msg_textToBot)
