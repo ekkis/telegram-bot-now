@@ -46,9 +46,9 @@ var self = module.exports = {
 		}
 
 		return async (req, res) => {
-			var js, m;
+			var js, m, bot;
 			try {
-				var bot = await bot_info(req);
+				bot = await bot_info(req);
 				Object.assign(self.info, bot);
 
 				if (req.method == 'GET') {
@@ -84,15 +84,16 @@ var self = module.exports = {
 	
 				await utils.msg(bot.key, m);
 			} catch(err) {
+				var msg = self.MSG[err.message];
+
 				// transmit the error
-				utils.err(self.MSG[err.message] || err);
+				utils.err(msg || err);
 	
 				// if a message could be produced, notify the user/group
 				if (!m) return;
 				try {
-					let s = self.MSG[err.message] || "";
-					m.text = s || self.MSG.FAIL;
-					await utils.msg(m);	
+					m.text = msg || self.MSG.FAIL;
+					await utils.msg(bot.key, m);	
 				}
 				catch(err) {
 					utils.err(err); 
