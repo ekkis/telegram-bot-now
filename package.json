@@ -8,7 +8,8 @@
     "test": "eslint *.js && mocha t/*.js",
     "preversion": "npm run test",
     "version": "",
-    "postversion": "git push && git push --tags && npm publish"
+    "postversion": "git push && git push --tags && npm publish",
+    "postinstall": "ln -s node_modules/telegram-bot-now/mk"
   },
   "author": "Erick Calder <e@arix.com>",
   "keywords": [

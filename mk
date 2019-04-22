@@ -13,7 +13,7 @@
 
 help() {
 	cat <<- "EOF"
-	mk [command]
+	mk [-d] [command]
 
 	where <command> may be:
 
@@ -179,7 +179,8 @@ secrets() {
 
 scaffold() {
 	d=node_modules/telegram-bot-now/scaffold
-	cp $d/* . > /dev/null
+	cp -r $d/ . > /dev/null
+
 	echo "The following files have been created in your project root:"
 	echo " - server.js"
 	echo " - now.json"
