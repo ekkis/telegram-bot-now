@@ -95,8 +95,7 @@ help() {
 msg() {
 	srv=$1; cmd=$2; chat_id=$3; from=$4; type=$5; args=$6
 	[ "$type" == "-p" -a "$TELEGRAM_BOT_IMAGE" == "" ] && {
-		echo "No Telegram bot image ID available"
-		exit 1
+		die "No Telegram bot image ID available!"
 	}
 
 	d=$(msg_data $srv $chat_id $from "$cmd" $type "$args")
@@ -104,6 +103,13 @@ msg() {
 		[ "$type" == "-p" ] && method="sendPhoto" || method="sendMessage"
 		fetch $method $srv -d "'$d'" $(hdr -j)
 	else
+		[ -z "$TELEGRAM_BOT_USERNAME" ] && {
+			s="
+			No Telegram bot username set! Set with:
+			\nexport TELEGRAM_BOT_USERNAME=<your-bot-username>
+			"
+			die "$s"
+		}
 		bot="?bot=$TELEGRAM_BOT_USERNAME"
 		fetch $bot $srv -d "'$d'" $(hdr -j)
 	fi
@@ -117,8 +123,7 @@ bind() {
 		fetch "/getWebhookInfo" -t; return
 	}
 	[ -z "$1" ] && {
-		echo "No bot name specified for the binding!"
-		exit 1
+		die "No bot name specified for the binding!"
 	}
 	#d='{"url": "%s", "allowed_updates": ["message", "channel_post"]}'
 	d=$(printf '{"url": "%s"}' "$(cat .url)/server.js?bot=$1")
@@ -130,6 +135,9 @@ clearqueue() {
 	id=$(fetch "/getUpdates" -t 2>/dev/null |jq .result[-1].update_id)
 	id=$(echo "$id+1" |bc)
 	fetch "/getUpdates" -t "-F 'offset=$id'"
+	[ -z "$TELEGRAM_BOT_USERNAME" ] && {
+		die "No Telegram bot username set!"
+	}
 	bind $TELEGRAM_BOT_USERNAME
 }
 
@@ -189,8 +197,7 @@ scaffold() {
 
 env() {
 	[ ! -f .env ] && {
-		echo "No environment file available!"
-		exit 1
+		die "No environment file available!"
 	}
 	echo '#'
 	echo '# run like this: eval "$(mk env)"'
@@ -329,6 +336,10 @@ msg_keyboardToTel() {
 		}
 	}
 	EOF
+}
+
+die() {
+	echo -e $1; exit 1
 }
 
 # --- main() ------------------------------------------------------------------
