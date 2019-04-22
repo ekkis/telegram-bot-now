@@ -20,13 +20,14 @@ $ npm install -g now
 
 ## Scaffolding
 
-To get started create a local link to our maker utility:
-```
-ln -s node_modules/telegram-bot-now/mk
-```
-Then grab our skeleton bot code:
+When the package is installed, it creates a symlink to our maker utility.  You can
+thus grab our skeleton code like this:
 ```
 $ ./mk scaffold
+```
+If for whatever reason the link is not there you can create it like this:
+```
+ln -s node_modules/telegram-bot-now/mk
 ```
 > Please note: the make utility will not work on Windows.  Users of that operating
 > system are encouraged to install Cygwin or another bash shell available
