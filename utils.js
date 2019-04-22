@@ -192,10 +192,15 @@ var self = module.exports = {
         })
         .then(res => res.json())
         .then(res => {
-            if (res.ok) self.debug('OUTPUT', {msg, res});
-            else self.err({msg, res});
+            if (res.ok) self.debug('POST', {msg, res});
+            else die({msg, res});
             return res;
-        });
+        })
+        .catch(e => {
+            if (e.code == 'ECONNRESET')
+                return self.post(key, msg);
+            self.err(e, 'POST');
+        })
     },
     info: async (key) => {
         return self.get(key, 'getMe');
@@ -231,8 +236,8 @@ var self = module.exports = {
         if (obj && obj.isObj) out.push(njsutil.inspect(obj, {depth: null}));
         console.log(...out);    // eslint-disable-line no-console
     },
-    err: (e) => {
-        console.error(e);   // eslint-disable-line no-console
+    err: (e, label = 'ERROR') => {
+        console.error(label, e);   // eslint-disable-line no-console
     }
 }
 

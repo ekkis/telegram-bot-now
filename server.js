@@ -46,10 +46,11 @@ var self = module.exports = {
 		}
 
 		return async (req, res) => {
-			var js, m, bot;
+			var m, bot;
 			try {
 				bot = await bot_info(req);
 
+				var js;
 				if (req.method == 'GET') {
 					js = m = utils.url(req.url);
 				}
@@ -83,8 +84,6 @@ var self = module.exports = {
 				await utils.msg(bot.key, m);
 			} catch(err) {
 				let msg = self.MSG[err.message];
-
-				// transmit the error
 				utils.err(msg || err);
 	
 				// if a message could be produced, notify the user/group
