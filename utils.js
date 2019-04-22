@@ -114,7 +114,6 @@ var self = module.exports = {
     
         var ret = Promise.resolve(true);
         for (let i = 0; i < msgs.length; i++) {
-self.debug('pre-post', key)	
             ret = ret.then(() => self.post(key, Object.assign({}, msg, msgs[i])));
         }
         return ret;
@@ -175,7 +174,6 @@ self.debug('pre-post', key)
         return ret;
     },
     tg: (key, method) => {
-        self.debug('pre-die', key)	
         if (!key) die('No Telegram bot API key');
         if (!method) die('No method specified for Telegram call');
         return 'https://api.telegram.org/bot' + key + '/' + method;
@@ -185,7 +183,6 @@ self.debug('pre-post', key)
             .then(res => res.json());
     },
     post: (key, msg) => {
-self.debug('pre-fetch', key)	
 		return fetch(self.tg(key, msg.method), {
 			method: 'post',
 			headers: {'Content-Type': 'application/json'},

@@ -18,12 +18,13 @@ var self = module.exports = {
 
 		// coalesce messages from multiple sources
 		Object.assign(self.MSG, routes.MSG, opts.MSG);
-
+utils.debug('pre-bind', self.info)	
 		// when binding information is given set up a webhook
 		if (opts.bind) utils.bind(opts.bind).catch(die).then(res => {
 			self.info.username = res.username;
 			self.info.name = res.first_name;
 			opts.state.save(res.username, null, 'bot', self.info);
+utils.debug('post-bind', self.info)	
 		});
 
 		// default messages and routes
@@ -49,7 +50,9 @@ var self = module.exports = {
 			var js, m, bot;
 			try {
 				bot = await bot_info(req);
+utils.debug('pre-info', self.info)	
 				Object.assign(self.info, bot);
+utils.debug('post-info', self.info)	
 
 				if (req.method == 'GET') {
 					js = m = utils.url(req.url);
