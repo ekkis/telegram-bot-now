@@ -125,7 +125,7 @@ var self = module.exports = {
         }
         function splitter(o) {
             var r = o.text.split(/^\s*---/m);
-            return r.map(x => Object.assign({}, o, {text: x.trimln()}));
+            return r.map(x => Object.assign({}, o, {text: x.heredoc()}));
         }
         function vars(o) {
             if (o.vars) o.text = o.text.sprintf(o.vars)
@@ -162,7 +162,7 @@ var self = module.exports = {
         }
         ret = ret.join('\n\n\n');
         if (s) ret = s.sprintf({help: ret});
-        return ret.trimln();
+        return ret.heredoc();
     },
     url: (s) => {
         var ret = {}; 
