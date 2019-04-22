@@ -2,6 +2,10 @@ const fetch = require('node-fetch');
 const jsp = require('js-prototype-lib');
 const njsutil = require('util');
 
+// grab all prototypes
+
+jsp.install();
+
 // convenience transform functions
 
 var xf = {
@@ -10,8 +14,6 @@ var xf = {
     tc: (s = '') => s.lc().replace(/(^|\s)\S/g, t => t.uc()),
     n: (s) => parseFloat(s),
 }
-
-// utilities
 
 var self = module.exports = {
     parse: async (s, desc) => {
@@ -190,8 +192,8 @@ var self = module.exports = {
         })
         .then(res => res.json())
         .then(res => {
-            self.debug('OUTPUT', {msg, res});
-            if (!res.ok) self.err({msg, res});
+            if (res.ok) self.debug('OUTPUT', {msg, res});
+            else self.err({msg, res});
             return res;
         });
     },
@@ -225,14 +227,14 @@ var self = module.exports = {
     },
     debug: (title, obj) => {
         if (!self.server.DEBUG) return;
-        console.log(title, njsutil.inspect(obj, {depth: null}));    // eslint-disable-line no-console
+        var out = [title];
+        if (obj && obj.isObj) out.push(njsutil.inspect(obj, {depth: null}));
+        console.log(...out);    // eslint-disable-line no-console
     },
     err: (e) => {
         console.error(e);   // eslint-disable-line no-console
     }
 }
-
-jsp.install();
 
 function die(s) {
     throw new Error(s);

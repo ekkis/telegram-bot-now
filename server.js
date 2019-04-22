@@ -18,14 +18,6 @@ var self = module.exports = {
 
 		// coalesce messages from multiple sources
 		Object.assign(self.MSG, routes.MSG, opts.MSG);
-utils.debug('pre-bind', self.info)	
-		// when binding information is given set up a webhook
-		if (opts.bind) utils.bind(opts.bind).catch(die).then(res => {
-			self.info.username = res.username;
-			self.info.name = res.first_name;
-			opts.state.save(res.username, null, 'bot', self.info);
-utils.debug('post-bind', self.info)	
-		});
 
 		// default messages and routes
 		var defaults = {
@@ -36,23 +28,27 @@ utils.debug('post-bind', self.info)
 			if (!routes[s]) routes[s] = () => self.MSG[s.uc()] || defaults[s]();
 		})
 
-		function bot_info(req) {
-			var bot = utils.url(req.url).bot;
-			if (!bot) return Promise.resolve({username: 'test_bot'});
-			return opts.state.get(bot, null, 'bot').then(res => {
-				res.url = 'https://' + req.headers.host;
-				res.username = bot;
-				return res;
-			})
+		async function bot_info(req) {
+			var nm = utils.url(req.url).bot;
+			if (!nm) return {username: 'test_bot'};
+			var ret = await opts.state.get(nm, null, 'info');
+			if (ret.isEmpty()) ret = await bind();
+			return ret;
+
+			async function bind() {
+				if (!opts.bind) throw new Error('No binding information!')
+				var res = await utils.bind(opts.bind);
+				self.info.username = res.username;
+				self.info.name = res.first_name;
+				await opts.state.save(res.username, null, 'info', self.info);
+				return self.info;
+			}
 		}
 
 		return async (req, res) => {
 			var js, m, bot;
 			try {
 				bot = await bot_info(req);
-utils.debug('pre-info', self.info)	
-				Object.assign(self.info, bot);
-utils.debug('post-info', self.info)	
 
 				if (req.method == 'GET') {
 					js = m = utils.url(req.url);
@@ -84,7 +80,6 @@ utils.debug('post-info', self.info)
 				await opts.state.save(
 					bot.username, m.username, 'dialogue', meta.dialogue
 				);
-utils.debug('pre-msg', bot)	
 				await utils.msg(bot.key, m);
 			} catch(err) {
 				let msg = self.MSG[err.message];
@@ -153,9 +148,4 @@ function msg(js) {
 		ret.reply_to_message_id = m.message_id;
 
 	return ret;
-}
-
-function die(e) {
-	console.log(e);		// eslint-disable-line no-console
-	process.exit(1);
 }

@@ -108,6 +108,19 @@ To see other commands supported by the make utility:
 $ ./mk --help
 ```
 
+## Test
+
+Before you can take your new bot for a spin, you need to get it started.  Run this:
+```bash
+$ ./mk msg -b "/start"
+```
+Then go to Telegram, find the bot and start chatting! If you used our scaffolding you
+can greet the bot:
+```
+/hello
+```
+and it should greet you back
+
 ## Additional Reading
 
 For a complete description of how to set up routes, create dialogues, the various utilities provided
