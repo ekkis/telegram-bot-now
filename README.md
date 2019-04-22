@@ -10,11 +10,11 @@ https://zeit.co/now
 ## Install
 
 The project is available from NPM and can be installed in the usual way:
-```
+```bash
 $ npm install --save telegram-bot-now
 ```
 But to deploy your bot you'll also need the Now client.  Install it like this:
-```
+```bash
 $ npm install -g now
 ```
 
@@ -22,7 +22,7 @@ $ npm install -g now
 
 When the package is installed, it creates a symlink to our maker utility.  You can
 thus grab our skeleton code like this:
-```
+```bash
 $ ./mk scaffold
 ```
 The main entry point for your server is named `server.js` so if your current `package.json`
@@ -58,7 +58,7 @@ configuration (in your `.vscode/launch.json`) like this, to allow debugging:
 ```
 Finally, if for whatever reason the symlink to `mk` was not properly created, you can create
 it by hand like this:
-```
+```bash
 ln -s node_modules/telegram-bot-now/mk
 ```
 > Please note: the make utility will not work on Windows.  Users of that operating
@@ -73,12 +73,12 @@ on Now first (the account name is included in the url) and the project name is t
 of the directory where your project resides
 
 Once you've entered in the right values run the command below:
-```
+```bash
 $ ./mk secrets
 ```
 which will upload the secrets to the Now environment.  If you need to run your bot locally
 (for debugging), you can:
-```
+```bash
 $ npm install --save-dev micro-dev # in case you don't have it installed
 $ eval "$(./mk env)"
 $ npm run dev
@@ -92,7 +92,7 @@ your `.vscode/launch.json` file contains the following line (as previously shown
 ## Deploy
 
 Finally, you can create a Now deployment very simply:
-```
+```bash
 $ ./mk
 ```
 The above will synchronise the local files in your project with the Now servers and 
@@ -100,11 +100,11 @@ the bot will automatically bind the Telegram *webhook* to the TELEGRAM_BOT_URL d
 address in your environment file.
 
 To see logs on the deployment:
-```
+```bash
 $ ./mk logs
 ```
 To see other commands supported by the make utility:
-```
+```bash
 $ ./mk --help
 ```
 
@@ -119,7 +119,7 @@ in the module, and troubleshooting guidance, please read the Medium article:
 
 If there's some enhancement you'd like to contribute, please clone the project, modify it 
 and submit a pull request:
-```
+```bash
 $ git clone https://github.com/ekkis/telegram-bot-now.git
 ```
 
