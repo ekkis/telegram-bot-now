@@ -175,7 +175,7 @@ console.log('pre-post', key)
         return ret;
     },
     tg: (key, method) => {
-console.log('pre-die', key)	
+        self.debug('pre-die', key)	
         if (!key) die('No Telegram bot API key');
         if (!method) die('No method specified for Telegram call');
         return 'https://api.telegram.org/bot' + key + '/' + method;
@@ -185,7 +185,7 @@ console.log('pre-die', key)
             .then(res => res.json());
     },
     post: (key, msg) => {
-console.log('pre-fetch', key)	
+self.debug('pre-fetch', key)	
 		return fetch(self.tg(key, msg.method), {
 			method: 'post',
 			headers: {'Content-Type': 'application/json'},
