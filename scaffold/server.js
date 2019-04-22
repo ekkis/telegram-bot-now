@@ -89,7 +89,9 @@ var state = {
 		// lines and uncomment the code below it
 
 		var p = ['cache', app, user, k].join('/');
-		return this.getpath(p) || {route: ''}
+		return Promise.resolve(
+			this.getpath(p) || {route: ''}
+		);
 
 		// return dbc.db(dbn).collection(cnm)
 		// 	.then(t => t.find({app, user}))
@@ -101,7 +103,8 @@ var state = {
 		// lines and uncomment the code below it
 
 		var p = ['cache', app, user, k].join('/');
-		this.setpath(p, o)
+		this.setpath(p, o);
+		return Promise.resolve({created: true, id: 0});
 
 		// return dbc.db(dbn).collection(cnm)
 		// 	.then(t => t.updateOne({app, user}, o, {upsert: true}))
