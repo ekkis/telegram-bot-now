@@ -237,6 +237,7 @@ var self = module.exports = {
         console.log(...out);    // eslint-disable-line no-console
     },
     err: (e, label = 'ERROR') => {
+        e = njsutil.inspect(e, {depth: null});
         console.error(label, e);   // eslint-disable-line no-console
     }
 }
