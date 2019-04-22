@@ -147,8 +147,8 @@ secrets() {
 	const fs = require('fs')
 	const jsp = require('js-prototype-lib')
 	jsp.install('string', 'object')
-	const now = require('../otc-trader/now.json').env;
-	const env = fs.readFileSync('../otc-trader/.env', 'utf8')
+	const now = require('./now.json').env;
+	const env = fs.readFileSync('./.env', 'utf8')
 		.replace(/^export\s+/gm, '')
 		.keyval()
 	var val = env.map((self, k, acc) => {
