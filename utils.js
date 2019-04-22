@@ -93,7 +93,7 @@ var self = module.exports = {
         var ret = opts.MSG[step.nm.uc()];
         if (!ret) die('No message for step [' + step.nm + ']');
         if (typeof ret == 'string') ret = { 
-            text: ret, vars: val.isObj() ? val : state.rsp.last()
+            text: ret, vars: val.isObj ? val : state.rsp.last()
         };
         if (val.choices) ret.choices = val.choices;
         if (!Array.isArray(ret)) ret = [ret];

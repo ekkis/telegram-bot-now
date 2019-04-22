@@ -52,4 +52,9 @@ var self = {
 	}
 }
 
-module.exports = bot.server(self);
+const env = process.env;
+const bind = {								// set up a default Telegram
+	key: env.TELEGRAM_BOT_KEY,				// webhook given the bot key
+	url: env.TELEGRAM_BOT_URL				// and deployment url
+}
+module.exports = bot.server(self, {bind});

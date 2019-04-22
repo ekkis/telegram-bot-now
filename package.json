@@ -23,9 +23,9 @@
     "url": "https://github.com/ekkis/telegram-bot-now.git"
   },
   "dependencies": {
-    "js-prototype-lib": "^1.0.6",
+    "js-prototype-lib": "^1.0.12",
     "micro": "^9.3.3",
-    "mocha": "^6.0.2",
+    "mocha": "^6.1.4",
     "node-fetch": "^2.3.0"
   },
   "devDependencies": {

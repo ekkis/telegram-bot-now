@@ -11,48 +11,65 @@ https://zeit.co/now
 
 The project is available from NPM and can be installed in the usual way:
 ```
-npm install --save telegram-bot-now
+$ npm install --save telegram-bot-now
 ```
 But to deploy your bot you'll also need the Now client.  Install it like this:
 ```
 $ npm install -g now
 ```
 
-## Use
+## Scaffolding
 
 To get started create a local link to our maker utility:
 ```
 ln -s node_modules/telegram-bot-now/mk
 ```
-Now you can grab our sample code:
+Then grab our skeleton bot code:
 ```
-./mk example
+$ ./mk scaffold
 ```
 > Please note: the make utility will not work on Windows.  Users of that operating
 > system are encouraged to install Cygwin or another bash shell available
 
 ## Deploy
 
-To deploy your bot you'll first need to set up your Telegram API key as follows:
-```
-./mk secret <your-secret-api-key>
-```
-which will upload the key as a secret to the Now environment and display an export
-statement you can use to initialise your local environment.  Without this key the
-maker utility will not function
+To deploy your bot you'll first need to edit your environment file `.env` with the
+needed information.  the TELEGRAM_BOT_KEY is the value Bot Father gives you for your
+bot, and the _URL will be your Now deployment alias.  You'll need to create an account
+on Now first (the account name is included in the url) and the project name is the name
+of the directory where your project resides
 
-After that you can create a Now deployment very simply via the command:
+Once you've entered in the right values run the command below:
 ```
-./mk
+$ ./mk secrets
 ```
-The above will synchronise the local files in your project with the Now servers and authomatically
-bind your deployment as a handler to your telegram bot using *webhooks*.  To see logs on the deployment:
+which will upload the secrets to the Now environment.  If you need to run your bot locally
+(for debugging), you can:
 ```
-./mk logs
+$ eval "$(./mk env)"
+$ npm run dev
+```
+Your environment file is also compatible with the Microsoft VS Code debugger.  Just make sure
+your `./.vscode/launch.json` file contains the following line:
+```json
+    "envFile": "${workspaceFolder}/.env"
+```
+
+Finally, you can create a Now deployment very simply:
+```
+$ ./mk
+```
+The above will synchronise the local files in your project with the Now servers and 
+the bot will automatically bind the Telegram *webhook* to the TELEGRAM_BOT_URL deployment
+address in your environment file.
+
+To see logs on the deployment:
+```
+$ ./mk logs
 ```
 To see other commands supported by the make utility:
 ```
-./mk --help
+$ ./mk --help
 ```
 
 ## Additional Reading

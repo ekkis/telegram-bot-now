@@ -23,8 +23,9 @@ help() {
 	   bind info - shows binding information
 	   bind rm - removes the existing binding
 	   clearqueue - useful to wipe out messages stuck in the queue
-	   secret <telegram-api-key> - installs your Telegram API key
-	   secret <key> <value> - installs other secrets
+	   secret <key> <value> - installs a secret (appends to the .env)
+	   secrets - install all secrets in your .env file
+	   scaffold - creates a skeleton bot in your project directory
 
 	To see the actual statements issued by this script when running
 	a command prefix the command with -d:
@@ -56,6 +57,24 @@ help() {
 		$ export TELEGRAM_BOT_IMAGE="AgADAQADaqgxGyX5yETF2DyyOFrdN_9sDDAABO6I-45utcxCSBoEAAEC"
 		$ mk msg -b "/ping" 2034492 "JohnDoe" -p
 
+	-- environment --
+
+	To be compatible with the VSCode debugger, environment files cannot include the EXPORT
+	statement, without which subshells cannot see the values.  The command below thus allows
+	you to initialise your environment from one of these files:
+
+		$ eval "$(mk env)"
+
+	but if you just run `mk env` it will remind you of the above syntax
+
+	You can also create all the secrets needed for your deployment from said file by running
+	the following command:
+
+		$ mk secrets
+
+	The script will also indicate any secrets required by your deployment that are missing
+	from your environment file
+
 	-- examples --
 
 	To show current bindings:
@@ -65,20 +84,12 @@ help() {
 	To set a secret with credentials for your database:
 
 	   $ mk secret "DATABASE_AUTH" "JohnDoe:SomePassword"
+
+	You can then check that the secret was also added to the environment file:
+
+		$ cat .env
 	EOF
 	exit 0
-}
-
-logs() {
-	msg="Cannot show logs.  No deployment has been made"
-	[ ! -f .url ] && {
-		echo $msg; exit 0
-	}
-	url=$(cat .url)
-	[ -z "$url" ] && {
-		echo $msg; exit 0
-	}
-	now logs -n ${1:-200} -f $url
 }
 
 msg() {
@@ -124,23 +135,78 @@ clearqueue() {
 
 secret() {
 	key=$1; val=$2
-	(( $# == 1 )) && {
-		key="telegram-api-key"; val=$1
-	}   
 	now secret add "$key" "$val"
 	[ $? -eq 0 ] && {
 		key=$(echo $key| sed 's/-/_/g' |awk '{print toupper($0)}')
-		echo "export $key=$val" 
+		echo "$key=$val" >> .env
 	}
 }
 
-example() {
-	d=node_modules/telegram-bot-now/examples
-	cp $d/server.js . > /dev/null
-	cp $d/now.json . > /dev/null
+secrets() {
+	script=$(cat <<- EOF
+	const fs = require('fs')
+	const jsp = require('js-prototype-lib')
+	jsp.install('string', 'object')
+	const now = require('../otc-trader/now.json').env;
+	const env = fs.readFileSync('../otc-trader/.env', 'utf8')
+		.replace(/^export\s+/gm, '')
+		.keyval()
+	var val = env.map((self, k, acc) => {
+		if (now[k] && env[k]) {
+			acc[now[k].replace(/^@/, '')] = env[k].q('')
+		}   
+	})
+
+	var rm = val.keys().map(k => 'echo Y | now secret rm ' + k)
+		.join('\n')
+	var add = val.keyval({ks: ' '}) 
+		.replace(/^/gm, 'now secret add ')
+	var missing = now.notIn(env);
+
+	console.log(rm)
+	console.log(add)
+	console.log("echo -e '\n* Environment set up (" + val.keys().length + " keys installed)'")
+	if (missing.length > 0) {
+		console.log("echo '\nThe following keys are missing from your environment'")
+		console.log("echo 'file for your deployment to work:'")
+		console.log("echo '\n  * " + missing.join('\n  * ') + "\n'")
+	}
+	EOF
+	)
+	script=$(node -e "$script")
+	[ -z "$NOEXEC" ] && eval "$script" || echo "$script"
+}
+
+scaffold() {
+	d=node_modules/telegram-bot-now/scaffold
+	cp $d/* . > /dev/null
 	echo "The following files have been created in your project root:"
 	echo " - server.js"
 	echo " - now.json"
+	echo " - .env"
+}
+
+env() {
+	[ ! -f .env ] && {
+		echo "No environment file available!"
+		exit 1
+	}
+	echo '#'
+	echo '# run like this: eval "$(mk env)"'
+	echo '#'
+	cat .env |grep -ve '^\s*$' |sed 's/^/export /'
+}
+
+logs() {
+	msg="Cannot show logs.  No deployment has been made"
+	[ ! -f .url ] && {
+		echo $msg; exit 0
+	}
+	url=$(cat .url)
+	[ -z "$url" ] && {
+		echo $msg; exit 0
+	}
+	now logs -n ${1:-200} -f $url
 }
 
 # --- support functionatlity --------------------------------------------------
@@ -153,7 +219,12 @@ url() {
 		echo "http://localhost:3000/server.js"
 	}
 	[ "$1" == "-t" ] && {
-		echo "https://api.telegram.org/bot${TELEGRAM_API_KEY}"
+		[ -z "$TELEGRAM_BOT_KEY" ] && {
+			echo "Telegram API not set.  Please set the value in your local environment with:" > /dev/stderr
+			echo "export TELEGRAM_BOT_KEY=xxxxxxxx" > /dev/stderr
+			exit 1
+		}
+		echo "https://api.telegram.org/bot${TELEGRAM_BOT_KEY}"
 	}
 }
 
@@ -267,17 +338,10 @@ msg_keyboardToTel() {
 [ "$1" == "--help" ] && {
 	help
 }
-[ -z "$TELEGRAM_BOT_KEY" ] && {
-	echo "Telegram API not set.  Please set the value in your local environment with:"
-	echo "export TELEGRAM_BOT_KEY=xxxxxxxx"
-	exit 1
-}
 [ ! -z "$1" ] && {
 	"$@"; exit
 }
 
-[ -f .url ] && now rm --yes $(cat .url)
+[ -f .url ] && url=$(cat .url)
+[ ! -z "$url" ] && now rm --yes $url
 now > .url
-
-# latest version auto-binds
-# bind $TELEGRAM_BOT_USERNAME

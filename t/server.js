@@ -113,8 +113,7 @@ function test(uri, cmd, res) {
 		body: {
 			message: {
 				chat: {id: '1', type: 'private'},
-				from: {username: 'ekkis'},
-				text: cmd
+				from: {username: 'ekkis'}, text: cmd
 			}
 		}
 	})
