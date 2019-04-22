@@ -9,7 +9,7 @@
     "preversion": "npm run test",
     "version": "",
     "postversion": "git push && git push --tags && npm publish",
-    "postinstall": "[ -f $PWD/mk ] || ln -s node_modules/telegram-bot-now/mk"
+    "postinstall": "echo $PWD && [ -f $PWD/mk ] || ln -s node_modules/telegram-bot-now/mk"
   },
   "author": "Erick Calder <e@arix.com>",
   "keywords": [
