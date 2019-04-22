@@ -125,7 +125,7 @@ function msg(js) {
 			var m = Object.assign({}, this);
 			if (typeof o == 'string') m.text = o;
 			else m = Object.assign(m, o);
-			return utils.msg(m);
+			return utils.msg(self.info.key, m);
 		},
 		keyboard(r, resize = true, one_time = true, selective = false) {
 			this.reply_markup = {

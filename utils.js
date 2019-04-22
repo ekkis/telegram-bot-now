@@ -106,9 +106,7 @@ var self = module.exports = {
         if (!msg.method) msg.method = 'sendMessage';
     
         var msgs = (Array.isArray(msg.text) ? msg.text : [msg.text])
-            .map(objs)
-            .map(splitter)
-            .flat()
+            .map(objs).map(splitter).flat()
             .map(vars)
             .map(keyboards)
             .map(attachments);
