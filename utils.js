@@ -114,7 +114,7 @@ var self = module.exports = {
     
         var ret = Promise.resolve(true);
         for (let i = 0; i < msgs.length; i++) {
-console.log('pre-post', key)	
+self.debug('pre-post', key)	
             ret = ret.then(() => self.post(key, Object.assign({}, msg, msgs[i])));
         }
         return ret;
