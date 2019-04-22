@@ -10,7 +10,7 @@ var self = module.exports = {
 	MSG: {
 		START: 'Welcome.  Your wish is my command.',
 		UNDEFINED: 'You have typed an unsupported command.  Please refer to /help and try again.',
-		FAIL: 'An unexpected error has occurred.  Please report it to the bot /owner',
+		FAIL: 'An unexpected error has occurred.  The bot /owner has been notified.',
 		CANCELLED: 'Your session has been cancelled.'
 	},
 	server: (routes, opts) => {
@@ -83,13 +83,12 @@ var self = module.exports = {
 				);
 				await utils.msg(bot.key, m);
 			} catch(err) {
-				let msg = self.MSG[err.message];
-				utils.err(msg || err);
+				utils.err(err);
 	
 				// if a message could be produced, notify the user/group
 				if (!m) return;
 				try {
-					m.text = msg || self.MSG.FAIL;
+					m.text = self.MSG[err.message] || self.MSG.FAIL;
 					await utils.msg(bot.key, m);	
 				}
 				catch(err) {
