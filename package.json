@@ -9,7 +9,7 @@
     "preversion": "npm run test",
     "version": "",
     "postversion": "git push && git push --tags && npm publish",
-    "postinstall": "[ $(dirname `pwd` |sed 's/.*\///') == 'node_modules' ] && ln -s $PWD/mk ../.."
+    "postinstall": "[ $(dirname `pwd` |sed 's/.*\\///') != 'node_modules' ] || ln -s $PWD/mk ../.."
   },
   "author": "Erick Calder <e@arix.com>",
   "keywords": [
