@@ -84,7 +84,7 @@ var self = module.exports = {
 	
 				await utils.msg(bot.key, m);
 			} catch(err) {
-				var msg = self.MSG[err.message];
+				let msg = self.MSG[err.message];
 
 				// transmit the error
 				utils.err(msg || err);
