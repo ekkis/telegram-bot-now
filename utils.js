@@ -116,7 +116,7 @@ var self = module.exports = {
     
         var ret = Promise.resolve(true);
         for (let i = 0; i < msgs.length; i++) {
-            ret = ret.then(() => self.post(key, Object.assign({}, msg, msgs[i])));
+            ret = ret.then(() => self.post(key, {}.concat(msg, msgs[i])));
         }
         return ret;
 

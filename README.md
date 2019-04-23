@@ -20,8 +20,8 @@ $ npm install -g now
 
 ## Scaffolding
 
-When the package is installed, it creates a symlink to our maker utility.  You can
-thus grab our skeleton code like this:
+When the package is installed, it creates a symlink to our maker utility in your
+project's root directory.  You can thus grab our skeleton code like this:
 ```bash
 $ ./mk scaffold
 ```
