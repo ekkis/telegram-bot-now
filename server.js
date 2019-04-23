@@ -81,7 +81,9 @@ var self = module.exports = {
 				await opts.state.save(
 					bot.username, m.username, 'dialogue', meta.dialogue
 				);
-				await utils.msg(bot.key, m);
+				var ret = await utils.msg(bot.key, m);
+				utils.debug('MSG', ret);
+				
 			} catch(err) {
 				utils.err(err);
 	

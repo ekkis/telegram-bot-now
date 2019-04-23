@@ -120,15 +120,17 @@ var self = module.exports = {
         }
         return ret;
 
-        function objs(o) {
-            return typeof o == 'string' ? {text: o} : o;
+        function objs(o = '') {
+            return o.isObj ? o : {text: o};
         }
         function splitter(o) {
+            if (!o.text.isStr) return [o.text];
             var r = o.text.split(/^\s*---/m);
             return r.map(x => Object.assign({}, o, {text: x.heredoc()}));
         }
         function vars(o) {
-            if (o.vars) o.text = o.text.sprintf(o.vars)
+            if (o.vars && o.text.isStr)
+                o.text = o.text.sprintf(o.vars)
             return o;
         }
         function keyboards(o) {
@@ -232,9 +234,14 @@ var self = module.exports = {
     },
     debug: (title, obj) => {
         if (!self.server.DEBUG) return;
-        var out = [title];
-        if (obj && obj.isObj) out.push(njsutil.inspect(obj, {depth: null}));
+        var out = [ title, exp(obj) ];
         console.log(...out);    // eslint-disable-line no-console
+
+        function exp(o) {
+            return (o && o.isObj)
+                ? njsutil.inspect(obj, {depth: null})
+                : obj;
+        }
     },
     err: (e, label = 'ERROR') => {
         e = njsutil.inspect(e, {depth: null});

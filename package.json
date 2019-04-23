@@ -1,6 +1,6 @@
 {
   "name": "telegram-bot-now",
-  "version": "1.1.4",
+  "version": "1.1.6",
   "description": "A NodeJs-based Telegram bot for the Now serverless platform",
   "main": "server.js",
   "scripts": {
@@ -24,7 +24,7 @@
     "url": "https://github.com/ekkis/telegram-bot-now.git"
   },
   "dependencies": {
-    "js-prototype-lib": "^1.0.15",
+    "js-prototype-lib": "^1.1.0",
     "micro": "^9.3.3",
     "mocha": "^6.1.4",
     "node-fetch": "^2.3.0"
