@@ -347,6 +347,7 @@ mkenv() {
 	help
 }
 [ ! -z "$1" -a "$1" != "--bot-key" ] && {
+	type "$1" &>/dev/null || die "Command [$1] not supported!"
 	[ ! -z "$DEBUG" ] && echo "CMD=$@"
 	"$@"; exit
 }
