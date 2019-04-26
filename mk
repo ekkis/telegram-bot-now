@@ -17,15 +17,16 @@ help() {
 
 	where <command> may be:
 
-	   logs - shows deployment logs for your project
-	   msg [-] <command> <chat_id> <from> - sends a message to your server
-	   bind - binds your server to the Telegram bot using web hooks
-	   bind info - shows binding information
-	   bind rm - removes the existing binding
-	   clearqueue - useful to wipe out messages stuck in the queue
-	   secret <key> <value> - installs a secret (appends to the .env)
-	   secrets - install all secrets in your .env file
-	   scaffold - creates a skeleton bot in your project directory
+		logs - shows deployment logs for your project
+		msg [-] <command> <chat_id> <from> - sends a message to your server
+		bind - binds your server to the Telegram bot using web hooks
+		bind info - shows binding information
+		bind rm - removes the existing binding
+		clearqueue - useful to wipe out messages stuck in the queue
+		secret <key> <value> - installs a secret (appends to the .env)
+		secrets - install all secrets in your .env file
+		scaffold - creates a skeleton bot in your project directory
+		kill - kills running local servers
 
 	To see the actual statements issued by this script when running
 	a command prefix the command with -d:
@@ -198,6 +199,10 @@ logs() {
 		echo $msg; exit 0
 	}
 	now logs -n ${1:-200} -f $url
+}
+
+kill() {
+	kill -9 $(ps aux |grep micro |awk '{print $2}')
 }
 
 # --- support functionatlity --------------------------------------------------
