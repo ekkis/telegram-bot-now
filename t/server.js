@@ -91,6 +91,15 @@ function test(uri, cmd, res) {
 		method: 'sendMessage'
 	}
 
+	bot.utils.get = (key, cmd) => {
+		return Promise.resolve({
+			ok: true,
+			result: {
+				username: 'tbn_test_bot',
+				first_name: 'TBN Test Bot'
+			}
+		})
+	}
 	bot.utils.post = (key, msg) => {
 		// removes functions 
 		msg = JSON.parse(JSON.stringify(msg));

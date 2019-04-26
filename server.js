@@ -30,11 +30,10 @@ var self = module.exports = {
 
 		async function bot_info(req) {
 			var [key, nm] = utils.urlinfo(req);
-			var ret = await opts.state.get(nm, null, 'info');
-			if (ret.isEmpty()) ret = await utils.info(key);
-			self.info.username = ret.username;
+			self.info.key = key;
+			var ret = await utils.info(key);
+			self.info.username = nm || ret.username;
 			self.info.name = ret.first_name;
-			await opts.state.save(ret.username, null, 'info', self.info);
 			return self.info;
 		}
 
