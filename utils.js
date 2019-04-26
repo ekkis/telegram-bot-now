@@ -169,7 +169,7 @@ var self = module.exports = {
     },
     urlargs: (s) => {
         var [, args] = s.split('?');
-        return args ? args.keyval('=', '&') || {};
+        return args ? args.keyval('=', '&') : {};
     },
     tg: (key, method) => {
         if (!key) die('No Telegram bot API key');
@@ -198,11 +198,25 @@ var self = module.exports = {
             self.err(e, 'POST');
         })
     },
-    info: async (req) => {
+    urlinfo: (req) => {
         var re = new RegExp('https://api.telegram.org/bot(.*)/')
         var m = req.url.match(re);
-        if (!m) die('No bot key found in request url!')
-        return self.get(m[1], 'getMe');
+        if (!m) {
+            m = req.headers.host.match(/localhost/);
+            if (!m) die('No bot key found in request url!')
+            m = ['', process.env.TELEGRAM_BOT_KEY];
+        }
+        var args = self.urlargs(req.url);
+        return [m[1], args.bot || 'tbn_test_bot'];
+    },
+    info: async (key) => {
+        return self.get(key, 'getMe').then(res => {
+            if (res.ok) return res.result;
+
+            var msg = 'Telegram bot API key'
+            msg += ' [Code: ' + res.error_code + ' / ' + res.description + ']';
+            die(msg);
+        });
     },
     bind: (info) => {
         if (!info.url) die('No Telegram bot url to bind to');
@@ -210,15 +224,10 @@ var self = module.exports = {
 
         var bot;
         return self.info(info.key).then(res => {
-            if (res.ok) bot = res.result;
-            else {
-                var msg = 'Telegram bot API key'
-                msg += ' [Code: ' + res.error_code + ' / ' + res.description + ']';
-                die(msg);
-            }
+            bot = res;
             return self.post(info.key, {
                 method: 'setWebhook',
-                url: info.url + '?bot=' + bot.username
+                url: info.url + '?bot=' + res.username
             })
         })
         .then(res => {

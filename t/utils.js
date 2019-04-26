@@ -33,19 +33,19 @@ describe('Help generator', () => {
 describe('Url parser', () => {
     it('No arguments - no index', () => {
         var href = 'http://tst.com'
-        var actual = utils.url(href)
+        var actual = utils.urlargs(href)
         var expected = {}
         assert.deepEqual(actual, expected)
     })
     it('No arguments with index', () => {
         var href = 'http://tst.com/'
-        var actual = utils.url(href)
+        var actual = utils.urlargs(href)
         var expected = {}
         assert.deepEqual(actual, expected)
     })
     it('Handles arguments', () => {
         var href = 'http://tst.com/?arg1=val1&arg2=val2'
-        var actual = utils.url(href)
+        var actual = utils.urlargs(href)
         var expected = { arg1: 'val1', arg2: 'val2' }
         assert.deepEqual(actual, expected)
     })

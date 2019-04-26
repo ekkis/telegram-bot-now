@@ -6,7 +6,7 @@ const bot = require('../server');
 
 const DEBUG = false;
 const username = 'ekkis'
-bot.info.username = 'test_bot'
+bot.info.username = 'tbn_test_bot'
 
 // set up base routes
 
@@ -59,14 +59,14 @@ var state = {
 				'dialogue': []
 			},
 			null: {
-				bot: {
-					username: 'test_bot'
+				info: {
+					username: bot.info.username
 				}
 			}
 		}
 	},
 	get(app, user, k) {
-		return this.cache[app][user][k]
+		return this.cache[app][user][k] || {}
 	},
 	save(app, user, k, o) {
 		this.cache[app][user][k] = o
