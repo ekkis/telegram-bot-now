@@ -167,16 +167,9 @@ var self = module.exports = {
         if (s) ret = s.sprintf({help: ret});
         return ret.heredoc();
     },
-    url: (s) => {
-        var ret = {}; 
+    urlargs: (s) => {
         var [, args] = s.split('?');
-        if (!args) return ret;
-
-        var r = args.split(/[&=]/);
-        for (var i = 0; i < r.length; i += 2) {
-            ret[r[i]] = r[i+1];
-        }   
-        return ret;
+        return args ? args.keyval('=', '&') || {};
     },
     tg: (key, method) => {
         if (!key) die('No Telegram bot API key');
@@ -205,8 +198,11 @@ var self = module.exports = {
             self.err(e, 'POST');
         })
     },
-    info: async (key) => {
-        return self.get(key, 'getMe');
+    info: async (req) => {
+        var re = new RegExp('https://api.telegram.org/bot(.*)/')
+        var m = req.url.match(re);
+        if (!m) die('No bot key found in request url!')
+        return self.get(m[1], 'getMe');
     },
     bind: (info) => {
         if (!info.url) die('No Telegram bot url to bind to');

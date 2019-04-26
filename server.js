@@ -29,10 +29,8 @@ var self = module.exports = {
 		})
 
 		async function bot_info(req) {
-			var nm = utils.url(req.url).bot;
-			if (!nm) return {username: 'test_bot'};
 			var ret = await opts.state.get(nm, null, 'info');
-			if (ret.isEmpty()) ret = await utils.info(opts.bind.key);
+			if (ret.isEmpty()) ret = await utils.info(req);
 			self.info.username = ret.username;
 			self.info.name = ret.first_name;
 			await opts.state.save(ret.username, null, 'info', self.info);
@@ -46,7 +44,7 @@ var self = module.exports = {
 
 				var js;
 				if (req.method == 'GET') {
-					js = m = utils.url(req.url);
+					js = m = utils.urlargs(req.url);
 				}
 				else if (req.method == 'POST') {
 					js = await json(req); m = msg(js);
