@@ -33,9 +33,9 @@ var self = module.exports = {
 			if (!nm) return {username: 'test_bot'};
 			var ret = await opts.state.get(nm, null, 'info');
 			if (ret.isEmpty()) ret = await utils.info(opts.bind.key);
-			self.info.username = res.username;
-			self.info.name = res.first_name;
-			await opts.state.save(res.username, null, 'info', self.info);
+			self.info.username = ret.username;
+			self.info.name = ret.first_name;
+			await opts.state.save(ret.username, null, 'info', self.info);
 			return self.info;
 		}
 
@@ -75,8 +75,7 @@ var self = module.exports = {
 				await opts.state.save(
 					bot.username, m.username, 'dialogue', meta.dialogue
 				);
-				var ret = await utils.msg(bot.key, m);
-				// utils.debug('MSG', ret);
+				await utils.msg(bot.key, m);
 
 			} catch(err) {
 				utils.err(err);
@@ -133,7 +132,7 @@ function msg(js) {
 				inline_keyboard: [r]
 			}
 		},
-		cmd(ls) {
+		subcmd(ls) {
 			var cmd = this.args.nth(0)
 			var args = this.args.replace(cmd, '').trim();
 			return (ls.indexOf(cmd) == -1) ? '' : [cmd.lc(), args];
