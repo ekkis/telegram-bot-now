@@ -36,6 +36,10 @@ help() {
 
 	   $ mk
 
+	For your first deployment, supply the bot key:
+
+		$mk --bot-key 743460589:AAFNkaZ0X3_51dZTuctsK0RrM9fKCRS22Ds
+
 	-- messaging --
 
 	For development you can run your bot using `npm start`.  You can send
@@ -63,12 +67,10 @@ help() {
 	statement, without which subshells cannot see the values.  The command below thus allows
 	you to initialise your environment from one of these files:
 
-		$ eval "$(mk env)"
+		$ eval `mk env`
 
-	but if you just run `mk env` it will remind you of the above syntax
-
-	You can also create all the secrets needed for your deployment from said file by running
-	the following command:
+	You can also create all the secrets needed for your deployment from the environment
+	file by running the following command:
 
 		$ mk secrets
 
@@ -103,13 +105,6 @@ msg() {
 		[ "$type" == "-p" ] && method="sendPhoto" || method="sendMessage"
 		fetch $method $srv -d "'$d'" $(hdr -j)
 	else
-		[ -z "$TELEGRAM_BOT_USERNAME" ] && {
-			s="
-			No Telegram bot username set! Set with:
-			\nexport TELEGRAM_BOT_USERNAME=<your-bot-username>
-			"
-			die "$s"
-		}
 		bot="?bot=$TELEGRAM_BOT_USERNAME"
 		fetch $bot $srv -d "'$d'" $(hdr -j)
 	fi
@@ -122,11 +117,8 @@ bind() {
 	[ "$1" == "info" ] && {
 		fetch "/getWebhookInfo" -t; return
 	}
-	[ -z "$1" ] && {
-		die "No bot name specified for the binding!"
-	}
 	#d='{"url": "%s", "allowed_updates": ["message", "channel_post"]}'
-	d=$(printf '{"url": "%s"}' "$(cat .url)/server.js?bot=$1")
+	d=$(printf '{"url": "%s"}' "$(cat .url)/server.js?bot=$TELEGRAM_BOT_USERNAME")
 	fetch "/setWebhook" -t -d "'$d'" $(hdr -j)
 }
 
@@ -135,9 +127,6 @@ clearqueue() {
 	id=$(fetch "/getUpdates" -t 2>/dev/null |jq .result[-1].update_id)
 	id=$(echo "$id+1" |bc)
 	fetch "/getUpdates" -t "-F 'offset=$id'"
-	[ -z "$TELEGRAM_BOT_USERNAME" ] && {
-		die "No Telegram bot username set!"
-	}
 	bind $TELEGRAM_BOT_USERNAME
 }
 
@@ -196,13 +185,7 @@ scaffold() {
 }
 
 env() {
-	[ ! -f .env ] && {
-		die "No environment file available!"
-	}
-	echo '#'
-	echo '# run like this: eval "$(mk env)"'
-	echo '#'
-	cat .env |grep -ve '^\s*$' |sed 's/^/export /'
+	cat .env |grep -ve '^\s*$' |sed 's/^/export /' |sed 's/$/;/'
 }
 
 logs() {
@@ -227,11 +210,6 @@ url() {
 		echo "http://localhost:3000/server.js"
 	}
 	[ "$1" == "-t" ] && {
-		[ -z "$TELEGRAM_BOT_KEY" ] && {
-			echo "Telegram API not set.  Please set the value in your local environment with:" > /dev/stderr
-			echo "export TELEGRAM_BOT_KEY=xxxxxxxx" > /dev/stderr
-			exit 1
-		}
 		echo "https://api.telegram.org/bot${TELEGRAM_BOT_KEY}"
 	}
 }
@@ -248,7 +226,7 @@ fetch() {
 	[[ "$srv" != -* ]] && {
 		cmd=$srv; srv=$1; shift
 	}
-	url="curl $@ $(url $srv)"
+	url="curl --silent $@ $(url $srv)"
 	[ ! -z "$cmd" ] && url="$url$cmd"
 	[ "$DEBUG" == "Y" ] && echo $url > /dev/stderr
 	eval $url
@@ -336,8 +314,28 @@ msg_keyboardToTel() {
 	EOF
 }
 
+err() {
+	echo "$@" > /dev/stderr
+}
+
 die() {
 	echo -e $1; exit 1
+}
+
+mkenv() {
+	url=$(pbpaste)
+	[ -z "$url" ] && die "Error: No deployment alias in clipboard!"
+	[[ "$url" =~ ^https://.*\.now\.sh ]] || die "Malformed url in clipboard!"
+
+	[ -z "$TELEGRAM_BOT_KEY" ] && {
+		echo -e "\nNo environment file available.  Please enter your Telegram bot key."
+		read -p "Bot key: " TELEGRAM_BOT_KEY
+	}
+	echo "TELEGRAM_BOT_KEY=$TELEGRAM_BOT_KEY" > .env
+	echo "TELEGRAM_BOT_URL=$url" >> .env
+
+	username=$(fetch "/getMe" -t |jq ".result.username" |tr -d '"')
+	echo "TELEGRAM_BOT_USERNAME=$username" >> .env
 }
 
 # --- main() ------------------------------------------------------------------
@@ -348,10 +346,26 @@ die() {
 [ "$1" == "--help" ] && {
 	help
 }
-[ ! -z "$1" ] && {
+[ ! -z "$1" -a "$1" != "--bot-key" ] && {
+	[ ! -z "$DEBUG" ] && echo "CMD=$@"
 	"$@"; exit
 }
 
 [ -f .url ] && url=$(cat .url)
 [ ! -z "$url" ] && now rm --yes $url
 now > .url
+
+[ -z "$TELEGRAM_BOT_KEY" ] && {
+	[ "$1" == "--bot-key" ] && TELEGRAM_BOT_KEY=$2
+	[ ! -f .env ] && mkenv
+	eval `mk env`
+	ENVINIT=Y
+}
+
+echo -e "\nBinding deployment to Telegram webhook..."
+bind
+
+[ ! -z "$ENVINIT" ] && {
+	echo -e "\nTo initialise your environment now please run:"
+	echo -e "\n   eval \`mk env\`\n"
+}

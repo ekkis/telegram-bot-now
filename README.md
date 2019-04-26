@@ -64,42 +64,25 @@ ln -s node_modules/telegram-bot-now/mk
 > Please note: the make utility will not work on Windows.  Users of that operating
 > system are encouraged to install Cygwin or another bash shell available
 
-## Configure
-
-Before deploying your bot you'll first need to edit your environment file `.env` with the
-needed information.  The TELEGRAM_BOT_KEY is the value the Bot Father gives you for your
-bot, and the _URL will be your Now deployment alias.  You'll need to create an account
-on Now first (the account name is included in the url) and the project name is the name
-of the directory where your project resides
-
-Once you've entered in the right values run the command below:
-```bash
-$ ./mk secrets
-```
-which will upload the secrets to the Now environment.  If you need to run your bot locally
-(for debugging), you can:
-```bash
-$ npm install --save-dev micro-dev # in case you don't have it installed
-$ eval "$(./mk env)"
-$ npm run dev
-```
-Your environment file is also compatible with the Microsoft VS Code debugger.  Just make sure
-your `.vscode/launch.json` file contains the following line (as previously shown):
-```json
-    "envFile": "${workspaceFolder}/.env"
-```
-
 ## Deploy
 
-Finally, you can create a Now deployment very simply:
+Before you can deploy your project you'll need an account on the Now network -- see the
+link on the preface to this document for creating one.
+
+Now account in hand, to deploy your project is super easy.  Run:
 ```bash
 $ ./mk
 ```
-The above will synchronise the local files in your project with the Now servers and 
-the bot will automatically bind the Telegram *webhook* to the TELEGRAM_BOT_URL deployment
-address in your environment file.
+...which will synchronise the local files in your project with the Now servers
+and automatically bind the deployment to your Telegram bot's *webhook*
 
-To see logs on the deployment:
+*Your first deployment, however*, won't have the information it needs to make
+the binding, namely the Bot key that Bot Father supplied you.  You can provide
+provide this key to the mk command (with the `--bot-key` argument) but if you 
+don't, it will prompt you for it. The information will be saved to your
+environment file (`.env`)
+
+To see logs on your deployment:
 ```bash
 $ ./mk logs
 ```
@@ -110,16 +93,34 @@ $ ./mk --help
 
 ## Test
 
-Before you can take your new bot for a spin, you need to get it started.  Run this:
-```bash
-$ ./mk msg -b "/start"
-```
-Then go to Telegram, find the bot and start chatting! If you used our scaffolding you
-can greet the bot:
+You should now be able to go to Telegram, find the bot and start chatting! If you used
+our scaffolding you can greet the bot:
 ```
 /hello
 ```
 and it should greet you back
+
+## Debug
+
+If you need to run your bot locally (for debugging), you can:
+```bash
+$ npm install --save-dev micro-dev # in case you don't have it installed
+$ npm run dev
+```
+Your environment file is also compatible with the Microsoft VS Code debugger.  Just make sure
+your `.vscode/launch.json` file contains the following line (as previously shown):
+```json
+    "envFile": "${workspaceFolder}/.env"
+```
+
+## Notes
+
+Your project will likely need to store credentials and other sensitive information needed
+to access external systems.  If that is the case, you can store this information in your
+environment file and deploy it to the Now network with the command below:
+```bash
+$ ./mk secrets
+```
 
 ## Additional Reading
 

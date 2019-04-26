@@ -32,17 +32,11 @@ var self = module.exports = {
 			var nm = utils.url(req.url).bot;
 			if (!nm) return {username: 'test_bot'};
 			var ret = await opts.state.get(nm, null, 'info');
-			if (ret.isEmpty()) ret = await bind();
-			return ret;
-
-			async function bind() {
-				if (!opts.bind) throw new Error('No binding information!')
-				var res = await utils.bind(opts.bind);
-				self.info.username = res.username;
-				self.info.name = res.first_name;
-				await opts.state.save(res.username, null, 'info', self.info);
-				return self.info;
-			}
+			if (ret.isEmpty()) ret = await utils.info(opts.bind.key);
+			self.info.username = res.username;
+			self.info.name = res.first_name;
+			await opts.state.save(res.username, null, 'info', self.info);
+			return self.info;
 		}
 
 		return async (req, res) => {
@@ -82,8 +76,8 @@ var self = module.exports = {
 					bot.username, m.username, 'dialogue', meta.dialogue
 				);
 				var ret = await utils.msg(bot.key, m);
-				utils.debug('MSG', ret);
-				
+				// utils.debug('MSG', ret);
+
 			} catch(err) {
 				utils.err(err);
 	
@@ -138,6 +132,11 @@ function msg(js) {
 			this.reply_markup = {
 				inline_keyboard: [r]
 			}
+		},
+		cmd(ls) {
+			var cmd = this.args.nth(0)
+			var args = this.args.replace(cmd, '').trim();
+			return (ls.indexOf(cmd) == -1) ? '' : [cmd.lc(), args];
 		}
 	};
 
