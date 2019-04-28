@@ -29,10 +29,9 @@ var self = module.exports = {
 		})
 
 		async function bot_info(req) {
-			var args = utils.urlargs(req.url);
-			var ret = await utils.info(args.bot);
-			self.info.concat(ret);
-			return self.info;
+			var key = utils.urlargs(req.url).bot;
+			var ret = await utils.info(key);
+			return self.info.concat(ret, {key});
 		}
 
 		return async (req, res) => {
