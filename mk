@@ -106,7 +106,7 @@ msg() {
 		[ "$type" == "-p" ] && method="sendPhoto" || method="sendMessage"
 		fetch $method $srv -d "'$d'" $(hdr -j)
 	else
-		bot="?bot=$TELEGRAM_BOT_USERNAME"
+		bot="?bot=$TELEGRAM_BOT_KEY"
 		fetch $bot $srv -d "'$d'" $(hdr -j)
 	fi
 }
@@ -119,7 +119,7 @@ bind() {
 		fetch "/getWebhookInfo" -t; return
 	}
 	#d='{"url": "%s", "allowed_updates": ["message", "channel_post"]}'
-	d=$(printf '{"url": "%s"}' "$(cat .url)/server.js?bot=$TELEGRAM_BOT_USERNAME")
+	d=$(printf '{"url": "%s"}' "$(cat .url)/server.js?bot=$TELEGRAM_BOT_KEY")
 	fetch "/setWebhook" -t -d "'$d'" $(hdr -j)
 }
 
@@ -128,7 +128,7 @@ clearqueue() {
 	id=$(fetch "/getUpdates" -t 2>/dev/null |jq .result[-1].update_id)
 	id=$(echo "$id+1" |bc)
 	fetch "/getUpdates" -t "-F 'offset=$id'"
-	bind $TELEGRAM_BOT_USERNAME
+	bind
 }
 
 secret() {
@@ -202,7 +202,7 @@ logs() {
 }
 
 kill() {
-	kill -9 $(ps aux |grep micro |awk '{print $2}')
+	/bin/kill -9 $(ps aux |grep "[m]icro" |awk '{print $2}')
 }
 
 # --- support functionatlity --------------------------------------------------
@@ -338,9 +338,6 @@ mkenv() {
 	}
 	echo "TELEGRAM_BOT_KEY=$TELEGRAM_BOT_KEY" > .env
 	echo "TELEGRAM_BOT_URL=$url" >> .env
-
-	username=$(fetch "/getMe" -t |jq ".result.username" |tr -d '"')
-	echo "TELEGRAM_BOT_USERNAME=$username" >> .env
 }
 
 # --- main() ------------------------------------------------------------------

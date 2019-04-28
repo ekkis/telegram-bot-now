@@ -26,13 +26,13 @@
   "dependencies": {
     "js-prototype-lib": "^1.3.0",
     "micro": "^9.3.3",
-    "mocha": "^6.1.4",
     "node-fetch": "^2.3.0"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
+    "mocha": "^6.1.4",
     "test-listen": "^1.1.0"
   }
 }

@@ -29,11 +29,9 @@ var self = module.exports = {
 		})
 
 		async function bot_info(req) {
-			var [key, nm] = utils.urlinfo(req);
-			self.info.key = key;
-			var ret = await utils.info(key);
-			self.info.username = nm || ret.username;
-			self.info.name = ret.first_name;
+			var args = utils.urlargs(req.url);
+			var ret = await utils.info(args.bot);
+			self.info.concat(ret);
 			return self.info;
 		}
 
