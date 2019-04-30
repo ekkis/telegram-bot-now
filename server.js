@@ -2,8 +2,6 @@ const {json} = require('micro');
 const pkg = require('./package.json');
 const utils = require('./utils');
 
-// local state
-
 var self = module.exports = {
 	info: { version: pkg.version },
 	utils, 
@@ -67,7 +65,7 @@ var self = module.exports = {
 				// is expected to be defined in the customer object
 
 				var meta = {req, bot: self};
-				meta.dialogue = await opts.state.get(
+				if (opts.state)	meta.dialogue = await opts.state.get(
 					bot.username, m.username, 'dialogue'
 				);
 				var route = m.cmd || meta.dialogue.route;
@@ -80,7 +78,7 @@ var self = module.exports = {
 					m.text = await fn(m, meta);
 					if (!m.text) m.text = self.MSG[route.uc()];
 				}
-				await opts.state.save(
+				if (opts.state) await opts.state.save(
 					bot.username, m.username, 'dialogue', meta.dialogue
 				);
 				await utils.msg(bot.key, m);
