@@ -233,9 +233,11 @@ fetch() {
 	}
 	url="curl --silent $@ $(url $srv)"
 	[ ! -z "$cmd" ] && url="$url$cmd"
-	[ "$DEBUG" == "Y" ] && echo $url > /dev/stderr
-	eval $url
-	echo ""
+	[ ! -z "$DEBUG" ] && echo $url > /dev/stderr
+	[ -z "$NOEXEC" ] && {
+		eval $url
+		echo ""
+	}
 }
 
 msg_data() {
@@ -333,8 +335,8 @@ mkenv() {
 	[[ "$url" =~ ^https://.*\.now\.sh ]] || die "Malformed url in clipboard!"
 
 	[ -z "$TELEGRAM_BOT_KEY" ] && {
-		echo -e "\nNo environment file available.  Please enter your Telegram bot key."
-		read -p "Bot key: " TELEGRAM_BOT_KEY
+		echo -e "\nNo environment file available.  Please supply your Telegram bot key."
+		read -p "Enter key: " TELEGRAM_BOT_KEY
 	}
 	echo "TELEGRAM_BOT_KEY=$TELEGRAM_BOT_KEY" > .env
 	echo "TELEGRAM_BOT_URL=$url" >> .env
@@ -357,6 +359,7 @@ mkenv() {
 [ -f .url ] && url=$(cat .url)
 [ ! -z "$url" ] && now rm --yes $url
 now > .url
+err=$?
 
 [ -z "$TELEGRAM_BOT_KEY" ] && {
 	[ "$1" == "--bot-key" ] && TELEGRAM_BOT_KEY=$2
@@ -365,8 +368,10 @@ now > .url
 	ENVINIT=Y
 }
 
-echo -e "\nBinding deployment to Telegram webhook..."
-bind
+[ $err == 0 ] && {
+	echo -e "\nBinding deployment to Telegram webhook..."
+	bind
+}
 
 [ ! -z "$ENVINIT" ] && {
 	echo -e "\nTo initialise your environment now please run:"
