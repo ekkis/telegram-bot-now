@@ -34,10 +34,23 @@ var self = module.exports = {
 			return self.info.concat(ret, {key});
 		}
 
+		var init = false;
 		return async (req, res) => {
-			var m, bot;
+			var m;
 			try {
-				bot = await bot_info(req);
+				// grab bot info from key
+				
+				var bot = await bot_info(req);
+
+				// if caller needs initialisation, run
+				// and cache to avoid reinitialisation
+
+				if (opts.init && !init)
+					init = await opts.init() || true;
+
+				// grab and format payload.  GET requests
+				// will come in from websites and link-based
+				// queries
 
 				var js;
 				if (req.method == 'GET') {
@@ -79,7 +92,7 @@ var self = module.exports = {
 				if (!m) return;
 				try {
 					m.text = self.MSG[err.message] || self.MSG.FAIL;
-					await utils.msg(bot.key, m);	
+					await utils.msg(self.info.key, m);	
 				}
 				catch(err) {
 					utils.err(err); 
