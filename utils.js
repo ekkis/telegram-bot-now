@@ -66,38 +66,44 @@ var self = module.exports = {
         return k.length == 1 ? ret[k[0]] : ret;
     },
     dialogue: async (msg, steps, meta, opts) => {
-        var state = meta.dialogue;
+        var step, val = {}, state = meta.dialogue;
         if (msg.cmd) {
             state.route = msg.cmd;
+            state.next = 0;
             state.rsp = [];
         }
-
-        var step = steps[state.rsp.length];
-        opts = Object.assign({fields: step, throwPrefix: state.route}, opts)
-		var val = await self.parse(msg, opts);
-		state.rsp.push({nm: step.nm, val});
-
-		if (step.post) {
-            let post = await step.post(val, state.rsp);
-            if (post) val = post;
+        else {
+            step = steps[state.next];
+            opts = {fields: step, throwPrefix: state.route}.concat(opts);
+            val = await self.parse(msg, opts);
+            state.rsp.push({nm: step.nm, val});
+    
+            if (step.post) {
+                let post = await step.post(val, state.rsp);
+                if (post) val = post;
+            }
+            if (step.next) state.next = step.next(val);
+            else state.next++;
         }
+        step = steps[state.next];
 
         // the last step in the dialogue has been reached
         // so we clear state as an indication to caller
 
-        if (steps.length == state.rsp.length) meta.dialogue = undefined;
+        if (state.next == steps.length) meta.dialogue = undefined;
 
         // if no messages provided it's up to the caller
         // to generate them
 
-        if (!opts.MSG) return {nm: step.nm, val};
+        if (!opts.MSG) return state.rsp.last();
 
         var ret = opts.MSG[step.nm.uc()];
         if (!ret) die('No message for step [' + step.nm + ']');
-        if (typeof ret == 'string') ret = { 
-            text: ret, vars: val.isObj ? val : state.rsp.last()
+        if (ret.isStr) ret = { 
+            text: ret, vars: val.isObj ? val : (state.rsp.last() || {})
         };
-        ret.options = val.options || val.choices;
+        var kbd = val.options || val.choices;
+        if (kbd) ret.options = kbd;
         if (!Array.isArray(ret)) ret = [ret];
         return ret;
     },

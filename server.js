@@ -15,7 +15,7 @@ var self = module.exports = {
 		utils.server = self;
 
 		// coalesce messages from multiple sources
-		Object.assign(self.MSG, routes.MSG, opts.MSG);
+		self.MSG.concat(routes.MSG, opts.MSG);
 
 		// default messages and routes
 		var defaults = {

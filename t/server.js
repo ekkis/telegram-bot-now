@@ -35,19 +35,38 @@ var routes = {
 	sprintf: () => {
 		return {text: 'my %{cardinal} fill-in', vars: {cardinal: 'first'}};
 	},
+	keyboard: (m) => {
+		return {text: 'Pick one', options: 'Yes/No'}
+	},
 	chat: async (m, meta) => {
 		var steps = [
-			{nm: 'initial'},
-			{nm: 'interim', post: s => ({name: s})},
+			{nm: 'initial', post: s => ({name: s})},
+			{nm: 'interim'},
 			{nm: 'final'}
 		];
 		return bot.utils.dialogue(m, steps, meta, {MSG: routes.MSG.CHAT})
+	},
+	next: async (m, meta) => {
+		var steps = [
+			{nm: 'cond', next: (rsp) => rsp == 'Yes' ? 1 : 2},
+			{nm: 'yes'},
+			{nm: 'no'}
+		];
+		return bot.utils.dialogue(m, steps, meta, {MSG: routes.MSG.NEXT})
 	},
 	MSG: {
 		CHAT: {
 			INITIAL: 'Greetings. What\'s your name?',
 			INTERIM: 'Hello %{name}',
 			FINAL: 'Good bye'
+		},
+		NEXT: {
+			COND: {
+				text: 'Pick one',
+				options: 'Yes/No'
+			},
+			YES: 'Good choice',
+			NO: 'Bad choice'
 		}
 	}
 }
@@ -78,7 +97,7 @@ var state = {
 
 // support functions
 
-function test(uri, cmd, res) {
+function test(uri, cmd, res, exp) {
 	var ret, i = 0;
 	var expected =  {
 		chat_id: '1',
@@ -89,7 +108,7 @@ function test(uri, cmd, res) {
 		args: '',
 		photo: undefined,
 		method: 'sendMessage'
-	}
+	}.concat(exp)
 
 	bot.utils.get = (key, cmd) => {
 		return Promise.resolve({
@@ -109,9 +128,9 @@ function test(uri, cmd, res) {
 			var x; [x, expected.cmd, expected.args]
 				= cmd.match(/^\/(\w+)(.*)$/).trim()
 		}
-		expected.text = Array.isArray(res) ? res[i++] : res;
+		expected.text = Array.isArray(res) ? res[i++] : res
 		delete msg.vars;
-		ret = Object.assign({}, msg);
+		ret = Object.assign({}, msg)
 
 		msg.ok = true
 		return Promise.resolve(msg)
@@ -175,6 +194,18 @@ describe('Server routes', () => {
 	it('handles variable replacements', () => {
 		return test(url, '/sprintf', 'my first fill-in')
 	})
+	it('supports custom keyboards', () => {
+		var opts = {
+			options: 'Yes/No', 
+			reply_markup: {
+				keyboard: [['Yes', 'No']],
+				one_time_keyboard: true,
+				resize_keyboard: true,
+				selective: false
+			}
+		}
+		return test(url, '/keyboard', 'Pick one', opts)
+	})
 	describe('Dialogue support', () => {
 		it('initial step', () => {
 			return test(url, '/chat', routes.MSG.CHAT.INITIAL)
@@ -185,6 +216,40 @@ describe('Server routes', () => {
 		})
 		it('final step', () => {
 			return test(url, 'whatever!', routes.MSG.CHAT.FINAL)
+		})
+	})
+	describe('Conditional dialogue - Path 1', () => {
+		it('Condition', () => {
+			var opts = {
+				options: 'Yes/No', 
+				reply_markup: {
+					keyboard: [['Yes', 'No']],
+					one_time_keyboard: true,
+					resize_keyboard: true,
+					selective: false
+				}
+			}	
+			return test(url, '/next', routes.MSG.NEXT.COND.text, opts)
+		})
+		it('Reply', () => {
+			return test(url, 'Yes', routes.MSG.NEXT.YES)
+		})
+	})
+	describe('Conditional dialogue - Path 2', () => {
+		it('Condition', () => {
+			var opts = {
+				options: 'Yes/No', 
+				reply_markup: {
+					keyboard: [['Yes', 'No']],
+					one_time_keyboard: true,
+					resize_keyboard: true,
+					selective: false
+				}
+			}	
+			return test(url, '/next', routes.MSG.NEXT.COND.text, opts)
+		})
+		it('Reply', () => {
+			return test(url, 'No', routes.MSG.NEXT.NO)
 		})
 	})
 })

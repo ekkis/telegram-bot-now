@@ -30,9 +30,9 @@
   },
   "devDependencies": {
     "eslint": "^5.16.0",
+    "mocha": "^6.1.4",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
-    "mocha": "^6.1.4",
     "test-listen": "^1.1.0"
   }
 }

@@ -182,7 +182,6 @@ scaffold() {
 	echo "The following files have been created in your project root:"
 	echo " - server.js"
 	echo " - now.json"
-	echo " - .env"
 }
 
 env() {
