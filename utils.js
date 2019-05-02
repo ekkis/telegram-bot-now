@@ -97,7 +97,7 @@ var self = module.exports = {
         if (typeof ret == 'string') ret = { 
             text: ret, vars: val.isObj ? val : state.rsp.last()
         };
-        if (val.choices) ret.choices = val.choices;
+        ret.options = val.options || val.choices;
         if (!Array.isArray(ret)) ret = [ret];
         return ret;
     },
@@ -135,7 +135,7 @@ var self = module.exports = {
             return o;
         }
         function keyboards(o) {
-            if (o.choices) msg.keyboard(o.choices)
+            if (o.options) msg.keyboard(o.options)
             return o;
         }
         function attachments(o) {

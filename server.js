@@ -125,6 +125,7 @@ function msg(js) {
 			return utils.msg(self.info.key, m);
 		},
 		keyboard(r, resize = true, one_time = true, selective = false) {
+			if (r.isStr) r = [r.arr()];
 			this.reply_markup = {
 				keyboard: r,
 				resize_keyboard: resize,
