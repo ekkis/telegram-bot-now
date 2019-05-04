@@ -66,7 +66,7 @@ var self = module.exports = {
         return k.length == 1 ? ret[k[0]] : ret;
     },
     dialogue: async (msg, steps, meta, opts) => {
-        var step, val = {}, state = meta.dialogue;
+        var step, val = {}, state = meta.dialogue || {};
         if (msg.cmd) {
             state.route = msg.cmd;
             state.next = 0;
@@ -141,7 +141,8 @@ var self = module.exports = {
             return o;
         }
         function keyboards(o) {
-            if (o.options) msg.keyboard(o.options)
+            var opts = o.options || o.choices;
+            if (opts) msg.keyboard(opts)
             return o;
         }
         function attachments(o) {
