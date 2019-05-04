@@ -29,12 +29,12 @@ var self = module.exports = {
 		async function bot_info(req) {
 			var key = utils.urlargs(req.url).bot;
 			var ret = await utils.info(key);
-			return self.info.concat(ret, {key});
+			return self.info.concat(ret, {key, host: req.headers.host});
 		}
 
 		var init = false;
 		return async (req, res) => {
-			var m;
+			var m, ret;
 			try {
 				// grab bot info from key
 				
@@ -81,8 +81,8 @@ var self = module.exports = {
 				if (opts.state) await opts.state.save(
 					bot.username, m.username, 'dialogue', meta.dialogue
 				);
-				await utils.msg(bot.key, m);
 
+				ret = await utils.msg(bot.key, m);
 			} catch(err) {
 				utils.err(err);
 	
@@ -96,7 +96,8 @@ var self = module.exports = {
 					utils.err(err); 
 				}	
 			} finally {
-				res.end("ok"); // always return ok
+				var local = self.info.host.match(/localhost/);
+				res.end(local ? ret.json() : 'ok');
 			}
 		};
 	}
