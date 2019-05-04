@@ -120,11 +120,9 @@ var self = module.exports = {
             .map(attachments);
         msg.text = '';
     
-        var ret = Promise.resolve(true);
-        for (let i = 0; i < msgs.length; i++) {
-            ret = ret.then(() => self.post(key, {}.concat(msg, msgs[i])));
-        }
-        return ret;
+        return msgs.map(async (m) => {
+            return await self.post(key, {}.concat(msg, m));
+        });
 
         function objs(o = '') {
             var isObj = typeof o == 'object' && !Array.isArray(o);
