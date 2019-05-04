@@ -206,6 +206,10 @@ describe('Server routes', () => {
 		}
 		return test(url, '/keyboard', 'Pick one', opts)
 	})
+	it.skip('supports subcommands', () => {
+	})
+	it.skip('supports replies', () => {
+	})
 	describe('Dialogue support', () => {
 		it('initial step', () => {
 			return test(url, '/chat', routes.MSG.CHAT.INITIAL)

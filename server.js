@@ -140,7 +140,7 @@ function msg(js) {
 			}
 		},
 		subcmd(ls) {
-			var cmd = this.args.nth(0)
+			var cmd = this.args.nth(0, ' ')
 			var args = this.args.replace(cmd, '').trim();
 			return (ls.indexOf(cmd) == -1) ? '' : [cmd.lc(), args];
 		}
