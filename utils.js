@@ -107,7 +107,7 @@ var self = module.exports = {
         if (!Array.isArray(ret)) ret = [ret];
         return ret;
     },
-    msg: (key, msg) => {
+    msg: async (key, msg) => {
         if (!msg) msg = this;
         if (!msg.text) return;
         if (!msg.chat_id) return;
@@ -120,9 +120,9 @@ var self = module.exports = {
             .map(attachments);
         msg.text = '';
     
-        return msgs.map(async (m) => {
+        return await Promise.all(msgs.map(async (m) => {
             return await self.post(key, {}.concat(msg, m));
-        });
+        }));
 
         function objs(o = '') {
             var isObj = typeof o == 'object' && !Array.isArray(o);
