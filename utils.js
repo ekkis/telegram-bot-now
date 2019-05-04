@@ -155,38 +155,6 @@ var self = module.exports = {
             return o;
         }
     },
-    help: (o, s) => {
-        var ret = [];
-        for (var k in o) {
-            if (typeof o[k] !== 'function') continue;
-            let fn = o[k].toString().split(/\n/);
-            let rem = [];
-            for (var ln of fn) {
-                if (ln.match(/\s*\/\//))
-                    rem.push(ln.replace("//", "").trim());
-                else if (rem.length > 0) {
-                    ret.push("/" + k + " " + rem.join(' '));
-                    break;
-                }
-            }
-        }
-        ret = ret.join('\n\n\n');
-        if (s) ret = s.sprintf({help: ret});
-        return ret.heredoc();
-    },
-    urlargs: (s) => {
-        var [, args] = s.split('?');
-        return args ? args.keyval('=', '&') : {};
-    },
-    tg: (key, method) => {
-        if (!key) die('No Telegram bot API key');
-        if (!method) die('No method specified for Telegram call');
-        return 'https://api.telegram.org/bot' + key + '/' + method;
-    },
-    get: (key, cmd) => {
-        return fetch(self.tg(key, cmd))
-            .then(res => res.json());
-    },
     post: (key, msg) => {
 		return fetch(self.tg(key, msg.method), {
 			method: 'post',
@@ -204,6 +172,19 @@ var self = module.exports = {
                 return self.post(key, msg);
             self.err(e, 'POST');
         })
+    },
+    get: (key, cmd) => {
+        return fetch(self.tg(key, cmd))
+            .then(res => res.json());
+    },
+    urlargs: (s) => {
+        var [, args] = s.split('?');
+        return args ? args.keyval('=', '&') : {};
+    },
+    tg: (key, method) => {
+        if (!key) die('No Telegram bot API key');
+        if (!method) die('No method specified for Telegram call');
+        return 'https://api.telegram.org/bot' + key + '/' + method;
     },
     info: async (key) => {
         return self.get(key, 'getMe').then(res => {
@@ -226,6 +207,25 @@ var self = module.exports = {
     },
     fork: (key) => {
         return self.bind({key, url: self.server.info.url});
+    },
+    help: (o, s) => {
+        var ret = [];
+        for (var k in o) {
+            if (typeof o[k] !== 'function') continue;
+            let fn = o[k].toString().split(/\n/);
+            let rem = [];
+            for (var ln of fn) {
+                if (ln.match(/\s*\/\//))
+                    rem.push(ln.replace("//", "").trim());
+                else if (rem.length > 0) {
+                    ret.push("/" + k + " " + rem.join(' '));
+                    break;
+                }
+            }
+        }
+        ret = ret.join('\n\n\n');
+        if (s) ret = s.sprintf({help: ret});
+        return ret.heredoc();
     },
     debug: (title, obj) => {
         if (!self.server.DEBUG) return;
