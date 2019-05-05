@@ -144,6 +144,12 @@ function msg(js) {
 			var cmd = this.args.nth(0, ' ')
 			var args = this.args.replace(cmd, '').trim();
 			return (ls.indexOf(cmd) == -1) ? '' : [cmd.lc(), args];
+		},
+		html() {
+			this.parse_mode = 'HTML';
+		},
+		img(url) {
+			this.photo = url;
 		}
 	};
 

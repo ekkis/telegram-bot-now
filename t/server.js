@@ -207,8 +207,13 @@ describe('Server routes', () => {
 		return test(url, '/keyboard', 'Pick one', opts)
 	})
 	it.skip('supports subcommands', () => {
+	
 	})
 	it.skip('supports replies', () => {
+
+	})
+	it.skip('supports image links', () => {
+
 	})
 	describe('Dialogue support', () => {
 		it('initial step', () => {

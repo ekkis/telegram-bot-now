@@ -146,6 +146,7 @@ var self = module.exports = {
             return o;
         }
         function attachments(o) {
+            if (o.text.match(/^http.*\.(jpg|gif|png)/i)) o.photo = o.text;
             if (o.photo) return {
                 method: 'sendPhoto', photo: o.photo
             }
