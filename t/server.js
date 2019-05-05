@@ -42,6 +42,11 @@ var routes = {
 	image: (m) => {
 		return bot_photo;
 	},
+	mixed: (m) => {
+		return `
+		caption text\n${bot_photo}
+		`;
+	},
 	chat: async (m, meta) => {
 		var steps = [
 			{nm: 'initial', post: s => ({name: s})},
@@ -216,8 +221,17 @@ describe('Server routes', () => {
 	it.skip('supports replies', () => {
 
 	})
-	it('supports image links', () => {
-		return test(url, '/image', '', {method: 'sendPhoto', photo: bot_photo})
+	describe('Image support', () => {
+		it('base case', () => {
+			return test(url, '/image', '', {
+				method: 'sendPhoto', photo: bot_photo, caption: ''
+			})
+		})
+		it('mixed content', () => {
+			return test(url, '/mixed', '', {
+				method: 'sendPhoto', photo: bot_photo, caption: 'caption text'
+			})
+		})
 	})
 	describe('Dialogue support', () => {
 		it('initial step', () => {

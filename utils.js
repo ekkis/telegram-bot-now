@@ -146,10 +146,9 @@ var self = module.exports = {
             return o;
         }
         function attachments(o) {
-            if (o.text.match(/^http.*\.(jpg|gif|png)/i)) o.photo = o.text;
-            if (o.photo) return {
-                method: 'sendPhoto', photo: o.photo
-            }
+            var m = o.text.match(/http.*\.(jpg|gif|png)/i);
+            if (m) { o.photo = m[0]; o.caption = o.text.replace(m[0], '').trim(); o.text = ''; }
+            if (o.photo) return o.concat({ method: 'sendPhoto' })
             if (o.document) return {
                 method: 'sendDocument', document: o.document
             }
