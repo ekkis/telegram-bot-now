@@ -7,6 +7,7 @@ const bot = require('../server');
 const DEBUG = false;
 const username = 'ekkis'
 bot.info.username = 'tbn_test_bot'
+const bot_photo = 'https://assets.wired.com/photos/w_1164/wp-content/uploads/2016/04/chat_bot-01.jpg'
 
 // set up base routes
 
@@ -37,6 +38,9 @@ var routes = {
 	},
 	keyboard: (m) => {
 		return {text: 'Pick one', options: 'Yes/No'}
+	},
+	image: (m) => {
+		return bot_photo;
 	},
 	chat: async (m, meta) => {
 		var steps = [
@@ -212,8 +216,8 @@ describe('Server routes', () => {
 	it.skip('supports replies', () => {
 
 	})
-	it.skip('supports image links', () => {
-
+	it('supports image links', () => {
+		return test(url, '/image', '', {method: 'sendPhoto', photo: bot_photo})
 	})
 	describe('Dialogue support', () => {
 		it('initial step', () => {
