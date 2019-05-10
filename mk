@@ -349,6 +349,15 @@ mkenv() {
 [ "$1" == "--help" ] && {
 	help
 }
+[ -z "$TELEGRAM_BOT_KEY" ] && {
+	[ "$1" == "--bot-key" ] && {
+		TELEGRAM_BOT_KEY=$2
+		shift; shift
+	}
+	[ ! -f .env ] && mkenv
+	eval `env`
+	ENVINIT=Y
+}
 [ ! -z "$1" -a "$1" != "--bot-key" ] && {
 	type "$1" &>/dev/null || die "Command [$1] not supported!"
 	[ ! -z "$DEBUG" ] && echo "CMD=$@"
@@ -358,16 +367,7 @@ mkenv() {
 [ -f .url ] && url=$(cat .url)
 [ ! -z "$url" ] && now rm --yes $url
 now > .url
-err=$?
-
-[ -z "$TELEGRAM_BOT_KEY" ] && {
-	[ "$1" == "--bot-key" ] && TELEGRAM_BOT_KEY=$2
-	[ ! -f .env ] && mkenv
-	eval `mk env`
-	ENVINIT=Y
-}
-
-[ $err == 0 ] && {
+[ $? == 0 ] && {
 	echo -e "\nBinding deployment to Telegram webhook..."
 	bind
 }
