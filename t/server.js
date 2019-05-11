@@ -84,7 +84,7 @@ var state = {
 	cache: {
 		[bot.info.username]: {
 			[username]: {
-				'dialogue': []
+				'dialogue': {}
 			},
 			null: {
 				info: {
@@ -132,11 +132,8 @@ function test(uri, cmd, res, exp) {
 		// removes functions 
 		msg = JSON.parse(JSON.stringify(msg));
 		if (!('photo' in msg)) msg.photo = undefined;
-		expected.cmd = ''; expected.args = cmd
-		if (cmd.startsWith('/')) {
-			var x; [x, expected.cmd, expected.args]
-				= cmd.match(/^\/(\w+)(.*)$/).trim()
-		}
+		expected.cmd = msg.cmd;
+		expected.args = msg.args;
 		expected.text = Array.isArray(res) ? res[i++] : res
 		delete msg.vars;
 		ret = Object.assign({}, msg)
@@ -194,6 +191,12 @@ describe('Server routes', () => {
 	it('pings the server', async () => {
 		return test(url, '/ping', 'pong!')
 	})
+	it('case insensitive', async () => {
+		return test(url, '/PING', 'pong!')
+	})
+	it('slashes optional', async () => {
+		return test(url, 'ping', 'pong!')
+	})
 	it('segments text into multiple messages', async () => {
 		return test(url, '/multi', ['this is an example', 'of a segmented', 'message'])
 	})
@@ -221,6 +224,9 @@ describe('Server routes', () => {
 	it.skip('supports replies', () => {
 
 	})
+	it.skip('supports markdown', () => {
+
+	})
 	describe('Image support', () => {
 		it('base case', () => {
 			return test(url, '/image', '', {
@@ -243,6 +249,17 @@ describe('Server routes', () => {
 		})
 		it('final step', () => {
 			return test(url, 'whatever!', routes.MSG.CHAT.FINAL)
+		})
+	})
+	describe('Dialogue cancellation', () => {
+		it('initial step', () => {
+			return test(url, '/chat', routes.MSG.CHAT.INITIAL)
+		})
+		it('interim step', () => {
+			return test(url, '/cancel', bot.MSG.CANCELLED)
+		})
+		it('final step', () => {
+			return test(url, 'whatever!', bot.MSG.UNDEFINED)
 		})
 	})
 	describe('Conditional dialogue - Path 1', () => {
