@@ -329,16 +329,11 @@ die() {
 }
 
 mkenv() {
-	url=$(pbpaste)
-	[ -z "$url" ] && die "Error: No deployment alias in clipboard!"
-	[[ "$url" =~ ^https://.*\.now\.sh ]] || die "Malformed url in clipboard!"
-
 	[ -z "$TELEGRAM_BOT_KEY" ] && {
 		echo -e "\nNo environment file available.  Please supply your Telegram bot key."
 		read -p "Enter key: " TELEGRAM_BOT_KEY
 	}
 	echo "TELEGRAM_BOT_KEY=$TELEGRAM_BOT_KEY" > .env
-	echo "TELEGRAM_BOT_URL=$url" >> .env
 }
 
 # --- main() ------------------------------------------------------------------
