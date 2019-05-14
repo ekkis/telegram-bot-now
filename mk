@@ -339,7 +339,7 @@ mkenv() {
 # --- main() ------------------------------------------------------------------
 
 [ "$1" == "-d" ] && {
-	shift; DEBUG=Y; set -x
+	shift; DEBUG=--debug; set -x
 }
 [ "$1" == "--help" ] && {
 	help
@@ -353,7 +353,7 @@ mkenv() {
 	eval `env`
 	ENVINIT=Y
 }
-[ ! -z "$1" -a "$1" != "--bot-key" ] && {
+[[ ! -z "$1" && ! "$1" =~ "-" ]] && {
 	type "$1" &>/dev/null || die "Command [$1] not supported!"
 	[ ! -z "$DEBUG" ] && echo "CMD=$@"
 	"$@"; exit
@@ -361,7 +361,7 @@ mkenv() {
 
 [ -f .url ] && url=$(cat .url)
 [ ! -z "$url" ] && now rm --yes $url
-now > .url
+now $DEBUG $1 > .url
 [ $? == 0 ] && {
 	echo -e "\nBinding deployment to Telegram webhook..."
 	bind
