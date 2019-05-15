@@ -61,8 +61,7 @@ function server(routes, opts) {
 				js = m = utils.urlargs(req.url);
 			}
 			else if (req.method == 'POST') {
-				js = await json(req); 
-				m = msg(js, !meta.dialogue.isEmpty());
+				js = await json(req); m = msg(js);
 			}
 			else throw new Error('Unsupported method [' + req.method + ']');
 			utils.debug('INPUT', js);
@@ -115,14 +114,16 @@ function server(routes, opts) {
 
 	function msg(js) {
 		var m = js.message;
+		var {username, first_name} = m.from;
+		var cmd = '', args = (m.reply_to_message || m).text || '';
+		if (m.contact) args = m.contact.phone_number;
 		var ret = {
 			chat_id: m.chat.id,
 			chat_type: m.chat.type,
-			username: m.from.username,
-			firstname: m.from.firstname,
-			parse_mode: 'Markdown',
-			cmd: '', args: (m.reply_to_message || m).text || '',
+			username, firstname: first_name,
+			cmd, args,
 			photo: m.photo,
+			parse_mode: 'Markdown',
 			reply(o) {
 				if (!o) throw new Error('-- telegram-bot-now::msg(): No reply specified --');
 				var m = Object.assign({}, this);

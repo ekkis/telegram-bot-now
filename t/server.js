@@ -227,6 +227,9 @@ describe('Server routes', () => {
 	it.skip('supports markdown', () => {
 
 	})
+	it.skip('supports contact info', () => {
+
+	})
 	describe('Image support', () => {
 		it('base case', () => {
 			return test(url, '/image', '', {
