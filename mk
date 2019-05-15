@@ -44,23 +44,32 @@ help() {
 	-- messaging --
 
 	For development you can run your bot using `npm start`.  You can send
-	messages to it from the command line like this:
+	messages to it from the command line as shown below.  If you want the bot
+	to actually send messages to a Telegram chat, set the TELEGRAM_BOT_CHATID
+	with a valid value in your environment.  You can also optionally set the
+	TELEGRAM_BOT_USERNAME variable if you want to send a specific username in
+	the messages.
 
-		$ mk msg -l "/ping" 2034492 "JohnDoe"	# local
+	To ping the local server:
+
+		$ mk msg -l "/ping"		# local
 	
 	After deployment (hosted on Now) you can message the bot with `-b`:
 	
-		$ mk msg -b "/ping" 2034492 "JohnDoe"	# deployed
+		$ mk msg -b "/ping"		# deployed
 
 	You can also message Telegram directly.  Hers's how:
 
-		$ mk msg -t "/ping" 2034492 "JohnDoe"	# Telegram
+		$ mk msg -t "/ping"		# Telegram
 
-	and for testing the sending of images, supply a valid file id via the
-	environment variable shown, and pass the -p parameter:
+	and for sending test messages with images to the bot, supply a valid file id 
+	to the -p parameter:
 
-		$ export TELEGRAM_BOT_IMAGE="AgADAQADaqgxGyX5yETF2DyyOFrdN_9sDDAABO6I-45utcxCSBoEAAEC"
-		$ mk msg -b "/ping" 2034492 "JohnDoe" -p
+		$ mk msg -b "/ping" -p "AgADAQADaqgxGyX5yETF2DyyOFrdN_9sDDAABO6I-45utcxCSBoEAAEC"
+
+	Contact info can also be sent like this:
+
+		$ mk msg -t "#" -c "+1 (800) 555-1212"
 
 	-- environment --
 
@@ -96,19 +105,19 @@ help() {
 }
 
 msg() {
-	srv=$1; cmd=$2; chat_id=$3; from=$4; type=$5; args=$6
-	[ "$type" == "-p" -a "$TELEGRAM_BOT_IMAGE" == "" ] && {
-		die "No Telegram bot image ID available!"
+	[ -z "$TELEGRAM_BOT_CHATID" ] && {
+		warn="WARNING: Environment variable TELEGRAM_BOT_CHATID not set!"
+		warn="$warn  No messages will be sent to Telegram"
+		echo -e "\033[33m$warn\033[0m"
 	}
+	srv=$1; cmd=$2; type=$3; args=$4
 
-	d=$(msg_data $srv "$cmd" $chat_id $from $type "$args")
+	d=$(msg_data $srv "$cmd" "$TELEGRAM_BOT_CHATID" "$TELEGRAM_BOT_USERNAME" "$type" "$args")
+	method="?bot=$TELEGRAM_BOT_KEY"
 	if [ "$srv" == "-t" ]; then
 		[ "$type" == "-p" ] && method="sendPhoto" || method="sendMessage"
-		fetch $method $srv -d "'$d'" $(hdr -j)
-	else
-		bot="?bot=$TELEGRAM_BOT_KEY"
-		fetch $bot $srv -d "'$d'" $(hdr -j)
 	fi
+	fetch $method $srv -d "'$d'" $(hdr -j)
 }
 
 bind() {
@@ -206,6 +215,21 @@ kill() {
 
 # --- support functionatlity --------------------------------------------------
 
+fetch() {
+	srv=$1; cmd=""; shift
+	# server is optional
+	[[ "$srv" != -* ]] && {
+		cmd=$srv; srv=$1; shift
+	}
+	url="curl --silent $@ $(url $srv)"
+	[ ! -z "$cmd" ] && url="$url$cmd"
+	[ ! -z "$DEBUG" ] && echo $url > /dev/stderr
+	[ -z "$NOEXEC" ] && {
+		eval $url
+		echo ""
+	}
+}
+
 url() {
 	[ "$1" == "-b" ] && {
 		echo "$(cat .url)/server.js"
@@ -224,32 +248,19 @@ hdr() {
 	}
 }
 
-fetch() {
-	srv=$1; cmd=""; shift
-	# server is optional
-	[[ "$srv" != -* ]] && {
-		cmd=$srv; srv=$1; shift
-	}
-	url="curl --silent $@ $(url $srv)"
-	[ ! -z "$cmd" ] && url="$url$cmd"
-	[ ! -z "$DEBUG" ] && echo $url > /dev/stderr
-	[ -z "$NOEXEC" ] && {
-		eval $url
-		echo ""
-	}
-}
-
 msg_data() {
-	srv=$1; cmd=$2; chat_id=${3:-0}; from=${4:-test_user}; type=$5; args=$6
+	srv=$1; cmd=$2; chat_id=${3:-0}; from=${4:-testuser}; type=$5; args=$6
 	
 	if [ "$type" == "-p" ];	then
 		if [ "$srv" == "-t" ]; then
-			printf "$(msg_photoToTel)" $chat_id
+			printf "$(msg_photoToTel)" $chat_id $args
 		else
-			printf "$(msg_photoToBot)" $chat_id $from
+			printf "$(msg_photoToBot)" $chat_id $from $args
 		fi
 	elif [ "$type" == "-k" ]; then
 		printf "$(msg_keyboardToTel)" $chat_id "$args"
+	elif [ "$type" == "-c" ]; then
+		printf "$(msg_contactToBot)" $chat_id $from "$args"
 	else
 		f=$([ "$srv" == "-t" ] && msg_textToTel || msg_textToBot)
 		printf "$f" $chat_id $from "$cmd"
@@ -282,7 +293,7 @@ msg_photoToTel() {
 	cat <<- EOF 
 	{   
 		"chat_id": "%s",
-		"photo": "$TELEGRAM_BOT_IMAGE"
+		"photo": "%s"
 	}   
 	EOF
 }
@@ -296,7 +307,7 @@ msg_photoToBot() {
 		},
 		"from": {"username": "%s"},
 		"photo": [{
-			"file_id": "$TELEGRAM_BOT_IMAGE",
+			"file_id": "%s",
 			"file_size": "857",
 			"width": "90", 
 			"height": "15"
@@ -317,6 +328,23 @@ msg_keyboardToTel() {
 			"selective": false
 		}
 	}
+	EOF
+}
+
+msg_contactToBot() {
+	cat <<- EOF 
+	{ "message": {  
+		"chat": {
+			"id": "%s",
+			"type": "private"
+		},
+		"from": {"username": "%s"},
+		"contact": {
+			"phone_number": "%s",
+			"first_name": "testuser",
+			"user_id": "0" 
+		}
+	}}
 	EOF
 }
 
