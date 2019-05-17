@@ -95,7 +95,8 @@ function server(routes, opts) {
 	
 			ret = await utils.msg(bot.key, m);
 		} catch(err) {
-			utils.err(ret = err);
+			utils.err(err);
+			ret = err.obj();
 	
 			// if a message could be produced, notify the user/group
 			if (!m) return;
