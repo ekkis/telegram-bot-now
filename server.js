@@ -8,11 +8,14 @@ var self = module.exports = {
 	info: { 
 		version: pkg.version, 
 		async get(req) {
-			var key = utils.urlargs(req.url).bot;
-			var ret = await utils.info(key);
-			return this.concat(ret, {
-				key, host: req.headers.host
-			});
+			var {host} = req.headers;
+			var {bot, script} = utils.urlargs(req.url);
+			return this.concat(
+				await utils.info(bot),
+				// TODO: figure out whether the connection is encrypted
+				// to generate an https url instead
+				{host, url: 'http://' + host + script}
+			);
 		}	
 	},
 	server, utils, 

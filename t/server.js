@@ -168,7 +168,8 @@ describe('Server routes', () => {
 	var service, url
 	beforeEach(async () => {
 		service = micro(bot.server(routes, {state}))
-		url = await listen(service)		
+		url = await listen(service)
+		url += '/server.js?bot=xxx'		
 	})
 	afterEach(() => {
 		service.close()

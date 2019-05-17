@@ -178,8 +178,10 @@ var self = module.exports = {
             .then(res => res.json());
     },
     urlargs: (s) => {
-        var [, args] = s.split('?');
-        return args ? args.keyval('=', '&') : {};
+        var [script, args] = s.split('?');
+        var ret = {script};
+        if (args) ret.concat(args.keyval('=', '&'))
+        return ret;
     },
     tg: (key, method) => {
         if (!key) die('No Telegram bot API key');
@@ -188,7 +190,11 @@ var self = module.exports = {
     },
     info: async (key) => {
         return self.get(key, 'getMe').then(res => {
-            if (res.ok) return res.result;
+            if (res.ok) {
+                var ret = res.result.concat({key});
+                ret.mv({first_name: 'name'});
+                return ret;    
+            }
 
             var msg = 'Telegram bot API key'
             msg += ' [Code: ' + res.error_code + ' / ' + res.description + ']';
