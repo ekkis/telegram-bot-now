@@ -99,9 +99,8 @@ var self = module.exports = {
 
         var ret = opts.MSG[step.nm.uc()];
         if (!ret) die('No message for step [' + step.nm + ']');
-        if (ret.isStr) ret = { 
-            text: ret, vars: val.isObj ? val : (state.rsp.last() || {})
-        };
+        if (ret.isStr) ret = {text: ret};
+        ret.vars = val.isObj ? val : (state.rsp.last() || {});
         var kbd = val.options || val.choices;
         if (kbd) ret.options = kbd;
         if (!Array.isArray(ret)) ret = [ret];
