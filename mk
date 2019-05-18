@@ -111,11 +111,17 @@ msg() {
 		echo -e "\033[33m$warn\033[0m"
 	}
 	srv=$1; cmd=$2; type=$3; args=$4
+	chat_id=$TELEGRAM_BOT_CHATID
+	bot_nm=$TELEGRAM_BOT_USERNAME
 
-	d=$(msg_data $srv "$cmd" "$TELEGRAM_BOT_CHATID" "$TELEGRAM_BOT_USERNAME" "$type" "$args")
+	d=$(msg_data $srv "$cmd" "$chat_id" "$bot_nm" "$type" "$args")
 	method="?bot=$TELEGRAM_BOT_KEY"
 	if [ "$srv" == "-t" ]; then
-		[ "$type" == "-p" ] && method="sendPhoto" || method="sendMessage"
+		case $type in
+		"-p") method="sendPhoto" ;;
+		"-d") method="sendDocument" ;;
+		*) method="sendMessage" ;;
+		esac
 	fi
 	fetch $method $srv -d "'$d'" $(hdr -j)
 }
@@ -261,6 +267,8 @@ msg_data() {
 		printf "$(msg_keyboardToTel)" $chat_id "$args"
 	elif [ "$type" == "-c" ]; then
 		printf "$(msg_contactToBot)" $chat_id $from "$args"
+	elif [ "$type" == "-d" ]; then
+		printf "$(msg_documentToBot)" $chat_id $from "$args"
 	else
 		f=$([ "$srv" == "-t" ] && msg_textToTel || msg_textToBot)
 		printf "$f" $chat_id $from "$cmd"
@@ -343,6 +351,30 @@ msg_contactToBot() {
 			"phone_number": "%s",
 			"first_name": "testuser",
 			"user_id": "0" 
+		}
+	}}
+	EOF
+}
+
+msg_documentToBot() {
+	cat <<- EOF 
+	{ "message": {  
+		"chat": {
+			"id": "%s",
+			"type": "private"
+		},
+		"from": {"username": "%s"},
+		"document": {
+			file_name: 'tst.pdf',
+			mime_type: 'application/pdf',
+			thumb: {
+				file_id: 'AAQBABMSLBEwAATNIk5Rfkv4jMNhAAIC',
+				file_size: 5895,
+				width: 247,
+				height: 320
+			},
+			file_id: 'BQADAQADUwADYWIBRwfwuzfSbsn_Ag',
+			file_size: 4191 
 		}
 	}}
 	EOF

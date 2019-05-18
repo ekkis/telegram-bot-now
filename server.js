@@ -127,6 +127,7 @@ function server(routes, opts) {
 			username, firstname: first_name,
 			cmd, args,
 			photo: m.photo,
+			document: m.document,
 			parse_mode: 'Markdown',
 			reply(o) {
 				if (!o) throw new Error('-- telegram-bot-now::msg(): No reply specified --');
