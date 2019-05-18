@@ -43,7 +43,7 @@ function server(routes, opts) {
 	})
 
 	return async (req, res) => {
-		var m, ret = '';
+		var m, ret = {};
 		try {
 			// grab bot info from key
 			
@@ -96,7 +96,7 @@ function server(routes, opts) {
 				bot.username, m.username, 'dialogue', meta.dialogue
 			);
 	
-			ret = await utils.msg(bot.key, m);
+			ret = (await utils.msg(bot.key, m)) || {};
 		} catch(err) {
 			utils.err(err);
 			ret = err.obj();
