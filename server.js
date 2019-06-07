@@ -10,11 +10,10 @@ var self = module.exports = {
 		async get(req) {
 			var {host} = req.headers;
 			var {bot, script} = utils.urlargs(req.url);
-			return this.concat(
+			var proto = host.indexOf('localhost') > -1 ? 'http' : 'https';
+			return this.assign(
 				await utils.info(bot),
-				// TODO: figure out whether the connection is encrypted
-				// to generate an https url instead
-				{host, url: 'http://' + host + script}
+				{host, url: proto + '://' + host + script}
 			);
 		}	
 	},
@@ -31,7 +30,7 @@ function server(routes, opts) {
 	utils.server = self;
 
 	// coalesce messages from multiple sources
-	self.MSG.concat(routes.MSG, opts.MSG);
+	self.MSG.assign(routes.MSG, opts.MSG);
 
 	// default messages and routes
 	var defaults = {

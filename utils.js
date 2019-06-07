@@ -65,7 +65,7 @@ var self = module.exports = {
         var k = Object.keys(ret);
         return k.length == 1 ? ret[k[0]] : ret;
     },
-    dialogue: async (msg, steps, meta, opts) => {
+    dialogue: async (msg, steps, meta, opts = {}) => {
         var step, val = {}, state = meta.dialogue || {};
         if (msg.cmd) {
             state.route = msg.cmd;
@@ -74,7 +74,7 @@ var self = module.exports = {
         }
         else {
             step = steps[state.next];
-            opts = {fields: step, throwPrefix: state.route}.concat(opts);
+            opts = {fields: step, throwPrefix: state.route}.assign(opts);
             val = await self.parse(msg, opts);
             state.rsp.push({nm: step.nm, val});
     
@@ -82,7 +82,7 @@ var self = module.exports = {
                 let post = await step.post(val, state.rsp);
                 if (post) val = post;
             }
-            if (step.next) state.next = step.next(val);
+            if (step.next) state.next = step.next(val, state);
             else state.next++;
         }
         step = steps[state.next];
@@ -121,7 +121,7 @@ var self = module.exports = {
     
         var ret = [];
         for (const m of msgs) {
-            ret.push(await self.post(key, {}.concat(msg, m)));
+            ret.push(await self.post(key, msg.assign(m)));
         }
         return ret;
         
@@ -147,7 +147,7 @@ var self = module.exports = {
         function attachments(o) {
             var m = o.text.match(/http.*\.(jpg|gif|png)/i);
             if (m) { o.photo = m[0]; o.caption = o.text.replace(m[0], '').trim(); o.text = ''; }
-            if (o.photo) return o.concat({ method: 'sendPhoto' })
+            if (o.photo) return o.assign({ method: 'sendPhoto' })
             if (o.document) return {
                 method: 'sendDocument', document: o.document
             }
@@ -179,7 +179,7 @@ var self = module.exports = {
     urlargs: (s) => {
         var [script, args] = s.split('?');
         var ret = {script};
-        if (args) ret.concat(args.keyval('=', '&'))
+        if (args) ret.assign(args.keyval('=', '&'))
         return ret;
     },
     tg: (key, method) => {
@@ -190,7 +190,7 @@ var self = module.exports = {
     info: async (key) => {
         return self.get(key, 'getMe').then(res => {
             if (res.ok) {
-                var ret = res.result.concat({key});
+                var ret = res.result.assign({key});
                 ret.mv({first_name: 'name'});
                 return ret;    
             }
