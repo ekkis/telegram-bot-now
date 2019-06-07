@@ -95,9 +95,10 @@ var self = module.exports = {
         // if no messages provided it's up to the caller
         // to generate them
 
-        if (!opts.MSG) return state.rsp.last();
+        var msgs = opts.MSG || self.server.MSG;
+        if (!msgs) return state.rsp.last();
 
-        var ret = opts.MSG[step.nm.uc()];
+        var ret = msgs[step.nm.uc()];
         if (!ret) die('No message for step [' + step.nm + ']');
         if (ret.isStr) ret = {text: ret};
         ret.vars = val.isObj ? val : (state.rsp.last() || {});
