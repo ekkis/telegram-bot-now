@@ -162,15 +162,9 @@ var self = module.exports = {
 			body: JSON.stringify(msg)
         })
         .then(res => res.json())
-        .then(res => {
-            if (res.ok) self.debug('POST', {msg, res});
-            else throw {msg, res};
-            return res;
-        })
         .catch(e => {
             if (e.code == 'ECONNRESET')
                 return self.post(key, msg);
-            self.err(e, 'POST');
         })
     },
     get: (key, cmd) => {
