@@ -58,20 +58,19 @@ function server(routes, opts) {
 			// will come in from websites and link-based
 			// queries
 	
-			var js, meta = {req, bot: self, dialogue: {}};
 			if (req.method == 'GET') {
-				js = m = utils.urlargs(req.url);
+				m = utils.urlargs(req.url);
 			}
 			else if (req.method == 'POST') {
-				js = await json(req); m = msg(js);
+				m = msg(await json(req));
 			}
-			else throw new Error('Unsupported method [' + req.method + ']');
-			utils.debug('INPUT', js);
+			else die('Unsupported method [' + req.method + ']');
 	
-			if (opts.state)	meta.dialogue = await opts.state.get(
+			m.meta = {req, bot: self, dialogue: {}};
+			if (opts.state)	m.meta.dialogue = await opts.state.get(
 				bot.username, m.username, 'dialogue'
 			);
-			if (m.args.startsWith('/') || meta.dialogue.isEmpty()) {
+			if (m.args.startsWith('/') || m.meta.dialogue.isEmpty()) {
 				let [cmd, args] = m.args.splitn('\\s');
 				m.cmd = cmd.replace('/', '').lc();
 				m.args = args || '';
@@ -81,21 +80,21 @@ function server(routes, opts) {
 			// by dialogues.  if none specified an 'undefined' route
 			// is expected to be defined in the customer object
 	
-			var route = m.cmd || meta.dialogue.route;
+			var route = m.cmd || m.meta.dialogue.route;
 			if (route.match(/^\/?cancel$/i)) {
-				meta.dialogue = undefined;
+				m.meta.dialogue = undefined;
 				m.text = self.MSG.CANCELLED;
 			}
 			else {
 				let fn = routes[route] || routes['undefined'];
-				m.text = await fn(m, meta);
+				m.text = await fn(m, m.meta);
 				if (!m.text) m.text = self.MSG[route.uc()];
 			}
 			if (opts.state) await opts.state.save(
-				bot.username, m.username, 'dialogue', meta.dialogue
+				bot.username, m.username, 'dialogue', m.meta.dialogue
 			);
 	
-			ret = (await utils.msg(bot.key, m)) || {};
+			ret = await m.reply()
 		} catch(err) {
 			utils.err(err);
 			ret = err.obj();
@@ -116,6 +115,7 @@ function server(routes, opts) {
 	}
 
 	function msg(js) {
+		utils.debug('INPUT', js);
 		var m = js.message;
 		var {username, first_name} = m.from;
 		var cmd = '', args = (m.reply_to_message || m).text || '';
@@ -129,10 +129,10 @@ function server(routes, opts) {
 			document: m.document,
 			parse_mode: 'Markdown',
 			reply(o) {
-				if (!o) throw new Error('-- telegram-bot-now::msg(): No reply specified --');
-				var m = Object.assign({}, this);
+				var m = {}.concat(this).rmp('meta');
 				if (typeof o == 'string') m.text = o;
-				else m = Object.assign(m, o);
+				else m.assign(o);
+				if (!m.text) die('No reply specified');
 				return utils.msg(self.info.key, m);
 			},
 			keyboard(r, resize = true, one_time = true, selective = false) {
@@ -151,9 +151,14 @@ function server(routes, opts) {
 				}
 			},
 			subcmd(ls) {
+				if (this.dialogue.subcmd)
+					return [this.dialogue.subcmd, this.args];
+
 				var cmd = this.args.nth(0, ' ')
 				var args = this.args.replace(cmd, '').trim();
-				return (ls.indexOf(cmd) == -1) ? '' : [cmd.lc(), args];
+				var ret = ls.indexOf(cmd) > -1 ? [cmd.lc(), args] : [];
+				if (ret.length > 0) this.dialogue.subcmd = ret[0];
+				return ret;
 			},
 			html() {
 				this.parse_mode = 'HTML';
@@ -171,4 +176,8 @@ function server(routes, opts) {
 	
 		return ret;
 	}
+}
+
+function die(msg) {
+	throw new Error(msg);
 }

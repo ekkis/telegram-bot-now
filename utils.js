@@ -159,7 +159,7 @@ var self = module.exports = {
 		return fetch(self.tg(key, msg.method), {
 			method: 'post',
 			headers: {'Content-Type': 'application/json'},
-			body: JSON.stringify(msg)
+			body: msg.json()
         })
         .then(res => res.json())
         .catch(e => {
