@@ -74,7 +74,6 @@ function server(routes, opts) {
 				let [cmd, args] = m.args.splitn('\\s');
 				m.cmd = cmd.replace('/', '').lc();
 				m.args = args || '';
-				m.subcmd = undefined;
 			}
 	
 			// the route is specified in the request but overridden
