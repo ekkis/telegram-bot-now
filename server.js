@@ -102,7 +102,10 @@ function server(routes, opts) {
 			// if a message could be produced, notify the user/group
 			if (!m) return;
 			try {
-				await m.reply(self.MSG[err.message] || self.MSG.FAIL);
+				let msg = err.PASS
+					? err.message
+					: (self.MSG[err.message] || self.MSG.FAIL);
+				await m.reply(msg);
 			}
 			catch(err) { utils.err(err); }
 		} finally {
