@@ -151,7 +151,7 @@ function server(routes, opts) {
 				var d = this.meta.dialogue;
 				if (d && d.subcmd) return [d.subcmd, this.args];
 
-				var cmd = this.args.nsth(0, ' ')
+				var cmd = this.args.nth(0, ' ')
 				var args = this.args.replace(cmd, '').trim();
 				var ret = ls.indexOf(cmd) > -1 ? [cmd.lc(), args] : [];
 				if (ret.length > 0) d.subcmd = ret[0];
