@@ -90,7 +90,7 @@ var self = module.exports = {
         // the last step in the dialogue has been reached
         // so we clear state as an indication to caller
 
-        if (state.next == steps.length) meta.dialogue = undefined;
+        if (state.next == steps.length - 1) meta.dialogue = undefined;
 
         // if no messages provided it's up to the caller
         // to generate them
