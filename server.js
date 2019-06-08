@@ -102,12 +102,9 @@ function server(routes, opts) {
 			// if a message could be produced, notify the user/group
 			if (!m) return;
 			try {
-				m.text = self.MSG[err.message] || self.MSG.FAIL;
-				await utils.msg(self.info.key, m);	
+				await m.reply(self.MSG[err.message] || self.MSG.FAIL);
 			}
-			catch(err) {
-				utils.err(err); 
-			}	
+			catch(err) { utils.err(err); }
 		} finally {
 			var local = self.info.host.match(/localhost/);
 			res.end(local ? ret.json() : 'ok');
