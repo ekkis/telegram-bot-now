@@ -127,8 +127,9 @@ var self = module.exports = {
         return ret;
         
         function objs(o = '') {
-            var isObj = typeof o == 'object' && !Array.isArray(o);
-            return isObj ? o : {text: o.toString()};
+            var ret = o.isObj ? o : {};
+            if (!ret.text) ret.text = o.toString();
+            return ret;
         }
         function splitter(o) {
             if (!o.text.isStr) return [o.text];
