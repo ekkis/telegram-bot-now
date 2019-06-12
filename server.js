@@ -8,7 +8,7 @@ var self = module.exports = {
 	info: { 
 		version: pkg.version, 
 		async get(req) {
-			var {host} = req.headers;
+			var {host} = req.headers.def({host: ''});
 			var {bot, script} = utils.urlargs(req.url);
 			var proto = host.indexOf('localhost') > -1 ? 'http' : 'https';
 			return this.assign(
