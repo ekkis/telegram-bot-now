@@ -31,7 +31,8 @@ function server(routes, opts) {
 
 	// coalesce messages from multiple sources
 	self.MSG.assign(routes.MSG, opts.MSG);
-
+	// dependency injections
+	if (opts.fetch) utils.opts.fetch = opts.fetch;
 	// default messages and routes
 	var defaults = {
 		help: () => utils.help(routes),
@@ -152,7 +153,7 @@ function server(routes, opts) {
 			},
 			subcmd(ls) {
 				var d = this.meta.dialogue;
-				if (d && d.subcmd) return [d.subcmd, this.args];
+				if (d && d.route && d.subcmd) return [d.subcmd, this.args];
 
 				var cmd = this.args.nth(0, ' ')
 				var args = this.args.replace(cmd, '').trim();

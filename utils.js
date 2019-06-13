@@ -16,6 +16,7 @@ var xf = {
 }
 
 var self = module.exports = {
+    opts: { fetch },
     parse: async (s, desc) => {
         var m = s;
         if (typeof s == 'object') s = s.args;
@@ -157,7 +158,7 @@ var self = module.exports = {
         }
     },
     post: (key, msg) => {
-		return fetch(self.tg(key, msg.method), {
+		return self.opts.fetch(self.tg(key, msg.method), {
 			method: 'post',
 			headers: {'Content-Type': 'application/json'},
 			body: msg.json()
@@ -169,7 +170,7 @@ var self = module.exports = {
         })
     },
     get: (key, cmd) => {
-        return fetch(self.tg(key, cmd))
+        return self.opts.fetch(self.tg(key, cmd))
             .then(res => res.json());
     },
     urlargs: (s) => {
