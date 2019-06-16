@@ -197,9 +197,15 @@ function test(bot) {
 		ret.matches = (expected) => {
 			var fn = async () => {
 				if (typeof expected == 'object') expected = expected.text || '';
-				var rsp = await call();
-				var re = new RegExp(expected.replace(/%{\w+}/g, '(.*?)'))
-				assert.ok(rsp.text.match(re))
+				var sc = /[*()]/g;	// special characters
+				expected = expected.heredoc()
+					.replace(sc, '')
+					.replace(/%{\w+}/g, '(.*?)');
+				(await call()).forEach(o => {
+					if (!o.ok) die('Result indicates failure');
+					var actual = o.result.text.replace(sc, '');
+					assert.ok(expected.match(actual))
+				})
 			}
 			fn.eval = (fn) => { return () => fn() };
 			return fn;
@@ -219,13 +225,10 @@ function test(bot) {
 			var service = micro(bot);
 			var url = (await listen(service)) + '/server.js?bot=' + BOTID;
 			var res = await request({
-				url, method: 'POST',
-				body: { message },
-				json: true
+				url, method: 'POST', body: { message }, json: true
 			})
 			service.close();
-			if (!res[0].ok) throw new Error('Result indicates failure')
-			return res[0].result;
+			return res;
 		}
 	}
 	return { cmd };
