@@ -195,11 +195,13 @@ function test(bot) {
 			return call();
 		}
 		ret.matches = (expected) => {
-			return async () => {
+			var fn = async () => {
 				var rsp = await call();
 				var re = new RegExp(expected.replace(/%{\w+}/g, '(.*?)'))
 				assert.ok(rsp.text.match(re))
 			}
+			fn.eval = (fn) => fn();
+			return fn;
 		};
 		return ret;
 
