@@ -1,6 +1,13 @@
-const {json} = require('micro');
+const micro = require('micro')
 const pkg = require('./package.json');
 const utils = require('./utils');
+const json = micro.json;
+
+// for testing utils
+
+const assert = require('assert').strict
+const listen = require('test-listen')
+const request = require('request-promise')
 
 var init = false;
 
@@ -17,7 +24,7 @@ var self = module.exports = {
 			);
 		}	
 	},
-	server, utils, 
+	server, utils, test,
 	MSG: {
 		START: 'Welcome.  Your wish is my command.',
 		UNDEFINED: 'You have typed an unsupported command.  Please refer to /help and try again.',
@@ -177,6 +184,47 @@ function server(routes, opts) {
 	
 		return ret;
 	}
+}
+
+function test(path) {
+    var bot = require(path);
+	var cmd = (s) => {
+		var ret = {};
+		ret.response = () => {
+			return call();
+		}
+		ret.matches = (expected) => {
+			return async () => {
+				var rsp = await call();
+				var re = new RegExp(expected.replace(/%{\w+}/g, '(.*?)'))
+				assert.ok(rsp.text.match(re))
+			}
+		};
+		return ret;
+
+		async function call() {
+			const BOTID = process.env.TELEGRAM_BOT_KEY;
+			const CHATID = process.env.TELEGRAM_BOT_CHATID;
+			if (!BOTID) die('No Telegram bot key!');
+			if (!CHATID) die('No Telegram chat id!');
+
+			var message = {
+				chat: {id: CHATID, type: 'private'},
+				from: {username: 'test_user'}, text: s
+			}
+			var service = micro(bot);
+			var url = (await listen(service)) + '/server.js?bot=' + BOTID;
+			var res = await request({
+				url, method: 'POST',
+				body: { message },
+				json: true
+			})
+			service.close();
+			if (!res[0].ok) throw new Error('Result indicates failure')
+			return res[0].result;
+		}
+	}
+	return { cmd };
 }
 
 function die(msg) {
