@@ -196,6 +196,7 @@ function test(bot) {
 		}
 		ret.matches = (expected) => {
 			var fn = async () => {
+				if (typeof expected == 'object') expected = expected.text || '';
 				var rsp = await call();
 				var re = new RegExp(expected.replace(/%{\w+}/g, '(.*?)'))
 				assert.ok(rsp.text.match(re))
