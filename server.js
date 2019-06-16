@@ -200,7 +200,7 @@ function test(bot) {
 				var re = new RegExp(expected.replace(/%{\w+}/g, '(.*?)'))
 				assert.ok(rsp.text.match(re))
 			}
-			fn.eval = (fn) => fn();
+			fn.eval = (fn) => { return () => fn() };
 			return fn;
 		};
 		return ret;
