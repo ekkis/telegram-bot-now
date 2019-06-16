@@ -186,8 +186,9 @@ function server(routes, opts) {
 	}
 }
 
-function test(path) {
-    var bot = require(path);
+function test(bot) {
+	if (typeof bot == 'string')
+		bot = require(bot);
 	var cmd = (s) => {
 		var ret = {};
 		ret.response = () => {
