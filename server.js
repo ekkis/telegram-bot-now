@@ -205,10 +205,10 @@ function test(bot, opts = {}) {
 				(await call()).forEach(o => {
 					if (!o.ok) die('Result indicates failure');
 					var actual = o.result.text.replace(sc, '');
-					assert.ok(expected.match(actual))
+					assert.ok(expected.match(actual), 'Response did not match expected value')
 				})
 			}
-			fn.eval = (fn) => { return () => fn() };
+			fn.eval = (cb) => { return () => { fn(); cb() } };
 			return fn;
 		};
 		return ret;

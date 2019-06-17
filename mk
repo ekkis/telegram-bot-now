@@ -163,7 +163,7 @@ secrets() {
 	const now = require('./now.json').env;
 	const env = fs.readFileSync('./.env', 'utf8')
 		.replace(/^export\s+/gm, '')
-		.keyval([])
+		.keyval()
 	var val = env.map((self, k, acc) => {
 		if (now[k] && env[k]) {
 			acc[now[k].replace(/^@/, '')] = env[k].q('')
