@@ -16,11 +16,12 @@ var self = module.exports = {
 		version: pkg.version, 
 		async get(req) {
 			var {host} = req.headers.def({host: ''});
-			var {bot, script} = utils.urlargs(req.url);
-			var proto = host.indexOf('localhost') > -1 ? 'http' : 'https';
+			var {bot, script, net} = utils.urlargs(req.url).def({net: 'main'});
+			var proto = 'http';
+			if (host.indexOf('localhost') == -1) proto += 's';
+			var url = proto + '://' + host + script;
 			return this.assign(
-				await utils.info(bot),
-				{host, url: proto + '://' + host + script}
+				await utils.info(bot), {host, url, net}
 			);
 		}	
 	},
@@ -186,7 +187,7 @@ function server(routes, opts) {
 	}
 }
 
-function test(bot) {
+function test(bot, opts = {}) {
 	if (typeof bot == 'string')
 		bot = require(bot);
 	var cmd = (s) => {
@@ -223,10 +224,14 @@ function test(bot) {
 				from: {username: 'test_user'}, text: s
 			}
 			var service = micro(bot);
-			var url = (await listen(service)) + '/server.js?bot=' + BOTID;
+			var args = {net: opts.net || 'local', bot: BOTID}
+			var url = await listen(service);
+			url += '/server.js?' + args.keyval('=','&')
+
 			var res = await request({
 				url, method: 'POST', body: { message }, json: true
 			})
+
 			service.close();
 			return res;
 		}
