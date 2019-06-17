@@ -197,7 +197,7 @@ function test(bot) {
 		ret.matches = (expected) => {
 			var fn = async () => {
 				if (typeof expected == 'object') expected = expected.text || '';
-				var sc = /[*()]/g;	// special characters
+				var sc = /[[\]*().?]/g;	// special characters
 				expected = expected.heredoc()
 					.replace(sc, '')
 					.replace(/%{\w+}/g, '(.*?)');
