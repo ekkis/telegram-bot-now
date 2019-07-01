@@ -83,8 +83,15 @@ var self = module.exports = {
                 let post = await step.post(val, state.rsp);
                 if (post) val = post;
             }
-            if (step.next) state.next = step.next(val, state);
-            else state.next++;
+            let nt = typeof step.next;
+            if (nt == 'undefined')
+                state.next++;
+            else if (nt == 'number')    // supports relative steps, -1 for previous, +1 for next
+                state.next += step.next;
+            else if (nt == 'string')    // support absolute next via name
+                state.next = steps.indexOfObj(o => o.nm == step.next);
+            else if (nt == 'function')
+                state.next = step.next(val, state);
         }
         step = steps[state.next];
 
