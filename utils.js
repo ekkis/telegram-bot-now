@@ -68,6 +68,8 @@ var self = module.exports = {
     },
     dialogue: async (msg, steps, meta, opts = {}) => {
         var step, val = {}, state = meta.dialogue || {};
+        var msgs = opts.MSG || self.server.MSG;
+
         if (msg.cmd) {
             state.route = msg.cmd;
             state.next = 0;
@@ -83,7 +85,14 @@ var self = module.exports = {
                 let post = await step.post(val, state.rsp);
                 if (post) val = post;
             }
+
+            // set next step in the sequence
             let nt = typeof step.next;
+            if (nt == 'undefined') {
+                let opts = val.options || msgs[step.nm.uc()].options;
+                step.next = opts.map(o => o.val == val)[0].step;
+                nt = typeof step.next;
+            }
             if (nt == 'undefined')
                 state.next++;
             else if (nt == 'number')    // supports relative steps, -1 for previous, +1 for next
@@ -103,15 +112,13 @@ var self = module.exports = {
         // if no messages provided it's up to the caller
         // to generate them
 
-        var msgs = opts.MSG || self.server.MSG;
         if (!msgs) return state.rsp.last();
 
         var ret = msgs[step.nm.uc()];
         if (!ret) die('No message for step [' + step.nm + ']');
         if (ret.isStr) ret = {text: ret};
         ret.vars = val.isObj ? val : (state.rsp.last() || {});
-        var kbd = val.options || val.choices;
-        if (kbd) ret.options = kbd;
+        if (val.options) ret.options = val.options;
         if (!Array.isArray(ret)) ret = [ret];
         return ret;
     },
@@ -150,7 +157,10 @@ var self = module.exports = {
             return o;
         }
         function keyboards(o) {
-            var opts = o.options || o.choices;
+            var opts = o.options.map(
+                o => o.isObj ? o.val : o
+            );
+
             if (opts) msg.keyboard(opts)
             return o;
         }
