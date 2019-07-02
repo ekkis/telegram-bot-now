@@ -5,6 +5,7 @@ const njsutil = require('util');
 // grab all prototypes
 
 jsp.install();
+jsp.setIsProperties();
 
 // convenience transform functions
 
@@ -87,20 +88,17 @@ var self = module.exports = {
             }
 
             // set next step in the sequence
-            let nt = typeof step.next;
-            if (nt == 'undefined') {
+            if (typeof step.next == 'undefined') {
                 let opts = val.options || msgs[step.nm.uc()].options;
-                step.next = opts.map(o => o.val == val)[0].step;
-                nt = typeof step.next;
+                if (opts) step.next = opts.filter(o => o.val == val)[0].step;
             }
-            if (nt == 'undefined')
+            if (typeof step.next == 'function')
+                step.next = step.next(val, state) || 1;
+            if (typeof step.next == 'undefined')
                 state.next++;
-            else if (nt == 'number')    // supports relative steps, -1 for previous, +1 for next
-                state.next += step.next;
-            else if (nt == 'string')    // support absolute next via name
+            else if (step.next.isNbr) state.next += step.next;
+            else if (step.next.isStr)
                 state.next = steps.indexOfObj(o => o.nm == step.next);
-            else if (nt == 'function')
-                state.next = step.next(val, state);
         }
         step = steps[state.next];
 
@@ -157,11 +155,13 @@ var self = module.exports = {
             return o;
         }
         function keyboards(o) {
-            var opts = o.options.map(
-                o => o.isObj ? o.val : o
-            );
-
-            if (opts) msg.keyboard(opts)
+            if (o.options) {
+                var opts = o.options;
+                if (opts.isArr) opts = [opts.map(
+                    o => o.isObj ? o.val : o
+                )];
+                msg.keyboard(opts);
+            }
             return o;
         }
         function attachments(o) {

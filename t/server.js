@@ -55,13 +55,29 @@ var routes = {
 		];
 		return bot.utils.dialogue(m, steps, meta, {MSG: routes.MSG.CHAT})
 	},
-	next: async (m, meta) => {
+	next_fn: async (m, meta) => {
 		var steps = [
 			{nm: 'cond', next: (rsp) => rsp == 'Yes' ? 1 : 2},
 			{nm: 'yes'},
 			{nm: 'no'}
 		];
 		return bot.utils.dialogue(m, steps, meta, {MSG: routes.MSG.NEXT})
+	},
+	next_msg_str: async (m, meta) => {
+		var steps = [
+			{nm: 'cond'}, {nm: 'yes'}, {nm: 'no'}
+		];
+		var MSG = {}.concat(routes.MSG.NEXT);
+		MSG.COND.options = [{val: 'Yes', step: 'yes'}, {val: 'No', step: 'no'}]
+		return bot.utils.dialogue(m, steps, meta, {MSG})
+	},
+	next_msg_nbr: async (m, meta) => {
+		var steps = [
+			{nm: 'cond'}, {nm: 'yes'}, {nm: 'no'}
+		];
+		var MSG = {}.concat(routes.MSG.NEXT);
+		MSG.COND.options = [{val: 'Yes', step: 1}, {val: 'No', step: 2}]
+		return bot.utils.dialogue(m, steps, meta, {MSG})
 	},
 	MSG: {
 		CHAT: {
@@ -104,6 +120,16 @@ var state = {
 	}
 }
 
+bot.utils.get = (key, cmd) => {
+	return Promise.resolve({
+		ok: true,
+		result: {
+			username: 'tbn_test_bot',
+			first_name: 'TBN Test Bot'
+		}
+	})
+}
+
 // support functions
 
 function test(uri, cmd, res, exp) {
@@ -119,15 +145,6 @@ function test(uri, cmd, res, exp) {
 		method: 'sendMessage'
 	}.concat(exp)
 
-	bot.utils.get = (key, cmd) => {
-		return Promise.resolve({
-			ok: true,
-			result: {
-				username: 'tbn_test_bot',
-				first_name: 'TBN Test Bot'
-			}
-		})
-	}
 	bot.utils.post = (key, msg) => {
 		// removes functions 
 		msg = JSON.parse(JSON.stringify(msg));
@@ -266,38 +283,91 @@ describe('Server routes', () => {
 			return test(url, 'whatever!', bot.MSG.UNDEFINED)
 		})
 	})
-	describe('Conditional dialogue - Path 1', () => {
-		it('Condition', () => {
-			var opts = {
-				options: 'Yes/No', 
-				reply_markup: {
-					keyboard: [['Yes', 'No']],
-					one_time_keyboard: true,
-					resize_keyboard: true,
-					selective: false
-				}
-			}	
-			return test(url, '/next', routes.MSG.NEXT.COND.text, opts)
+	describe('Conditional dialogues', () => {
+		describe('Function - Path 1', () => {
+			it('Condition', () => {
+				var opts = {
+					options: 'Yes/No', 
+					reply_markup: {
+						keyboard: [['Yes', 'No']],
+						one_time_keyboard: true,
+						resize_keyboard: true,
+						selective: false
+					}
+				}	
+				return test(url, '/next_fn', routes.MSG.NEXT.COND.text, opts)
+			})
+			it('Reply', () => {
+				return test(url, 'Yes', routes.MSG.NEXT.YES)
+			})
 		})
-		it('Reply', () => {
-			return test(url, 'Yes', routes.MSG.NEXT.YES)
+		describe('Function - Path 2', () => {
+			it('Condition', () => {
+				var opts = {
+					options: 'Yes/No', 
+					reply_markup: {
+						keyboard: [['Yes', 'No']],
+						one_time_keyboard: true,
+						resize_keyboard: true,
+						selective: false
+					}
+				}	
+				return test(url, '/next_fn', routes.MSG.NEXT.COND.text, opts)
+			})
+			it('Reply', () => {
+				return test(url, 'No', routes.MSG.NEXT.NO)
+			})
 		})
-	})
-	describe('Conditional dialogue - Path 2', () => {
-		it('Condition', () => {
-			var opts = {
-				options: 'Yes/No', 
-				reply_markup: {
-					keyboard: [['Yes', 'No']],
-					one_time_keyboard: true,
-					resize_keyboard: true,
-					selective: false
-				}
-			}	
-			return test(url, '/next', routes.MSG.NEXT.COND.text, opts)
+		describe('String - Path Yes', () => {
+			it('Condition', () => {
+				var opts = {
+					options: [{val: 'Yes', step: 'yes'}, {val: 'No', step: 'no'}], 
+					reply_markup: {
+						keyboard: [['Yes', 'No']],
+						one_time_keyboard: true,
+						resize_keyboard: true,
+						selective: false
+					}
+				}	
+				return test(url, '/next_msg_str', routes.MSG.NEXT.COND.text, opts)
+			})
+			it('Reply', () => {
+				return test(url, 'Yes', routes.MSG.NEXT.YES)
+			})
 		})
-		it('Reply', () => {
-			return test(url, 'No', routes.MSG.NEXT.NO)
+		describe('String - Path No', () => {
+			it('Condition', () => {
+				var opts = {
+					options: [{val: 'Yes', step: 'yes'}, {val: 'No', step: 'no'}], 
+					reply_markup: {
+						keyboard: [['Yes', 'No']],
+						one_time_keyboard: true,
+						resize_keyboard: true,
+						selective: false
+					}
+				}	
+				return test(url, '/next_msg_str', routes.MSG.NEXT.COND.text, opts)
+			})
+			it('Reply', () => {
+				return test(url, 'No', routes.MSG.NEXT.NO)
+			})
+		})
+		describe('Number', () => {
+			it('Condition', () => {
+				var opts = {
+					options: [{val: 'Yes', step: 1}, {val: 'No', step: 2}], 
+					reply_markup: {
+						keyboard: [['Yes', 'No']],
+						one_time_keyboard: true,
+						resize_keyboard: true,
+						selective: false
+					}
+				}	
+				return test(url, '/next_msg_nbr', routes.MSG.NEXT.COND.text, opts)
+			})
+			it('Reply', () => {
+				return test(url, 'No', routes.MSG.NEXT.NO)
+			})
 		})
 	})
 })
