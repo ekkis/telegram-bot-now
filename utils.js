@@ -101,6 +101,7 @@ var self = module.exports = {
                 state.next = steps.indexOfObj(o => o.nm == step.next);
         }
         step = steps[state.next];
+        if (step.skip && step.skip(state.rsp.last().val)) step = steps[++state.next];
 
         // the last step in the dialogue has been reached
         // so we clear state as an indication to caller

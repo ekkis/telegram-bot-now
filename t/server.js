@@ -79,6 +79,14 @@ var routes = {
 		MSG.COND.options = [{val: 'Yes', step: 1}, {val: 'No', step: 2}]
 		return bot.utils.dialogue(m, steps, meta, {MSG})
 	},
+	skipped: async (m, meta) => {
+		var steps = [
+			{nm: 'initial', post: s => ({name: s})},
+			{nm: 'interim', skip: v => v == 'ziggy'},
+			{nm: 'final'}
+		];
+		return bot.utils.dialogue(m, steps, meta, {MSG: routes.MSG.SKIPPED})
+	},
 	MSG: {
 		CHAT: {
 			INITIAL: 'Greetings. What\'s your name?',
@@ -92,6 +100,10 @@ var routes = {
 			},
 			YES: 'Good choice',
 			NO: 'Bad choice'
+		},
+		SKIPPED: {
+			INITIAL: 'Greetings. What\'s your name?',
+			FINAL: 'Good bye'
 		}
 	}
 }
@@ -368,6 +380,15 @@ describe('Server routes', () => {
 			it('Reply', () => {
 				return test(url, 'No', routes.MSG.NEXT.NO)
 			})
+		})
+	})
+	describe('Dialogue skipping', () => {
+		it('initial step', () => {
+			return test(url, '/skipped', routes.MSG.CHAT.INITIAL)
+		})
+		it('interim step', () => {
+			var name = 'ziggy';
+			return test(url, name, routes.MSG.CHAT.FINAL)
 		})
 	})
 })
