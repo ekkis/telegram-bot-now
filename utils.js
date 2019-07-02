@@ -90,7 +90,10 @@ var self = module.exports = {
             // set next step in the sequence
             if (typeof step.next == 'undefined') {
                 let opts = val.options || msgs[step.nm.uc()].options;
-                if (opts) step.next = opts.filter(o => o.val == val)[0].step;
+                if (opts) {
+                    opts = opts.filter(o => o.val == val)[0];
+                    if (opts) step.next = opts.step;
+                }
             }
             if (typeof step.next == 'function')
                 step.next = step.next(val, state) || 1;
