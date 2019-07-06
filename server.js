@@ -188,55 +188,59 @@ function server(routes, opts) {
 }
 
 function test(bot, opts = {}) {
+	const BOTID = process.env.TELEGRAM_BOT_KEY;
+	const CHATID = process.env.TELEGRAM_BOT_CHATID;
+	if (!BOTID) die('No Telegram bot key!');
+	if (!CHATID) die('No Telegram chat id!');
+
 	if (typeof bot == 'string')
 		bot = require(bot);
+
 	var cmd = (s) => {
-		var ret = {};
-		ret.response = () => {
-			return call();
-		}
-		ret.matches = (expected) => {
-			var fn = async () => {
-				if (typeof expected == 'object') expected = expected.text || '';
-				var sc = /[[\]*().?]/g;	// special characters
-				expected = expected.heredoc()
-					.replace(sc, '')
-					.replace(/%{\w+}/g, '(.*?)');
-				(await call()).forEach(o => {
-					if (!o.ok) die('Result indicates failure');
-					var actual = o.result.text.replace(sc, '');
-					assert.ok(expected.match(actual), 'Response did not match expected value')
-				})
+		return {
+			matches: (expected, cb) => {
+				return async () => {
+					if (typeof expected == 'object') expected = expected.text || '';
+					var sc = /[[\]*().?]/g;	// special characters
+					var i = 0;
+					expected = expected.heredoc()
+						.replace(sc, '')
+						.replace(/%{\w+}/g, '(.*?)')
+						.split(/\s+---\s+/);
+					(await invoke(s)).forEach(o => {
+						if (!o.ok) return assert.fail(
+							'Error ' + o.error_code + ': ' + o.description
+						);
+						var actual = o.result.text.replace(sc, '');
+						return assert.ok(
+							actual.match(expected[i++]), 
+							'Response mismatch [' + s + ']: ' + actual
+						);
+					})
+					if (cb) await cb();
+				}
 			}
-			fn.eval = (cb) => { return () => { fn(); cb() } };
-			return fn;
-		};
-		return ret;
-
-		async function call() {
-			const BOTID = process.env.TELEGRAM_BOT_KEY;
-			const CHATID = process.env.TELEGRAM_BOT_CHATID;
-			if (!BOTID) die('No Telegram bot key!');
-			if (!CHATID) die('No Telegram chat id!');
-
-			var message = {
-				chat: {id: CHATID, type: 'private'},
-				from: {username: 'test_user'}, text: s
-			}
-			var service = micro(bot);
-			var args = {net: opts.net || 'local', bot: BOTID}
-			var url = await listen(service);
-			url += '/server.js?' + args.keyval('=','&')
-
-			var res = await request({
-				url, method: 'POST', body: { message }, json: true
-			})
-
-			service.close();
-			return res;
 		}
 	}
 	return { cmd };
+
+	async function invoke(cmd) {
+		var message = {
+			chat: {id: CHATID, type: 'private'},
+			from: {username: 'test_user'}, text: cmd
+		}
+		var service = micro(bot);
+		var args = {net: opts.net || 'local', bot: BOTID}
+		var url = await listen(service);
+		url += '/server.js?' + args.keyval('=','&')
+
+		var res = await request({
+			url, method: 'POST', body: { message }, json: true
+		})
+
+		service.close();
+		return res.isArr ? res : [res];
+	}
 }
 
 function die(msg) {
