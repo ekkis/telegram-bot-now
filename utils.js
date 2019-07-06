@@ -161,7 +161,7 @@ var self = module.exports = {
         function keyboards(o) {
             if (o.options) {
                 var opts = o.options;
-                if (opts.isArr) opts = [opts.map(
+                if (opts.isArr && opts[0].isObj) opts = [opts.map(
                     o => o.isObj ? o.val : o
                 )];
                 msg.keyboard(opts);
