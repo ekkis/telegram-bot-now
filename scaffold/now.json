@@ -3,7 +3,6 @@
   "builds": [{ "src": "server.js", "use": "@now/node" }],
   "regions": ["gru"],
   "env": {
-    "TELEGRAM_BOT_KEY": "@telegram-bot-key",
-    "TELEGRAM_BOT_URL": "@telegram-bot-url"
+    "TELEGRAM_BOT_KEY": "@telegram-bot-key"
   }
 }
