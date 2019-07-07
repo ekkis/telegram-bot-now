@@ -3,12 +3,6 @@ const pkg = require('./package.json');
 const utils = require('./utils');
 const json = micro.json;
 
-// for testing utils
-
-const assert = require('assert').strict
-const listen = require('test-listen')
-const request = require('request-promise')
-
 var init = false;
 
 var self = module.exports = {
@@ -187,7 +181,13 @@ function server(routes, opts) {
 	}
 }
 
+// unit testing facility
+
 function test(bot, opts = {}) {
+	const assert = require('assert').strict
+	const listen = require('test-listen')
+	const request = require('request-promise')
+
 	const BOTID = process.env.TELEGRAM_BOT_KEY;
 	const CHATID = process.env.TELEGRAM_BOT_CHATID;
 	if (!BOTID) die('No Telegram bot key!');

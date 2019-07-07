@@ -191,8 +191,8 @@ secrets() {
 }
 
 scaffold() {
-	d=node_modules/telegram-bot-now/scaffold/*
-	cp -r $d/ . > /dev/null
+	d=node_modules/telegram-bot-now/scaffold
+	cp -r $d/* . > /dev/null
 
 	echo "The following files have been created in your project root:"
 	echo " - server.js"

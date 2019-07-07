@@ -13,9 +13,7 @@
   },
   "author": "Erick Calder <e@arix.com>",
   "keywords": [
-    "telegram",
-    "bot",
-    "now"
+    "telegram", "bot", "now"
   ],
   "license": "ISC",
   "homepage": "https://github.com/ekkis/telegram-bot-now",
@@ -26,13 +24,13 @@
   "dependencies": {
     "js-prototype-lib": "^1.25.0",
     "micro": "^9.3.3",
-    "node-fetch": "^2.3.0"
-  },
-  "devDependencies": {
-    "eslint": "^5.16.0",
-    "mocha": "^6.1.4",
+    "node-fetch": "^2.3.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "test-listen": "^1.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "mocha": "^6.1.4"
   }
 }
