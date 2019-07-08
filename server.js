@@ -135,8 +135,9 @@ function server(routes, opts) {
 				var m = {}.concat(this).rmp('meta');
 				if (typeof o == 'string') m.text = o;
 				else m.assign(o);
-				if (!m.text) die('No reply specified');
-				return utils.msg(self.info.key, m);
+				return m.text
+					? utils.msg(self.info.key, m)
+					: {};
 			},
 			keyboard(r, resize = true, one_time = true, selective = false) {
 				if (r.isStr) r = [r.arr()];

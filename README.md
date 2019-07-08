@@ -102,7 +102,12 @@ and it should greet you back
 
 ## Debug
 
-If you need to run your bot locally (for debugging), you can:
+If you need to run your bot locally (for debugging), edit the `package.json`, adding
+a new script:
+```json
+    "dev": "micro-dev",
+```
+and then:
 ```bash
 $ npm install --save-dev micro-dev # in case you don't have it installed
 $ npm run dev

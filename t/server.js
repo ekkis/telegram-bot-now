@@ -36,6 +36,10 @@ var routes = {
 	sprintf: () => {
 		return {text: 'my %{cardinal} fill-in', vars: {cardinal: 'first'}};
 	},
+	noreturn: (m) => {
+		// replies manually without return
+		m.reply({text: 'manual return'});
+	},
 	keyboard: (m) => {
 		return {text: 'Pick one', options: 'Yes/No'}
 	},
@@ -214,7 +218,8 @@ describe('Server routes', () => {
 		var expected = [
 			'/ping to check that the server is alive',
 			'/multi to check that segmented messages work',
-			'/array to check that array returns work'
+			'/array to check that array returns work',
+			'/noreturn replies manually without return'
 		]
 		return test(url, '/help', expected.join('  \n'))
 	})
@@ -235,6 +240,9 @@ describe('Server routes', () => {
 	})
 	it('handles variable replacements', () => {
 		return test(url, '/sprintf', 'my first fill-in')
+	})
+	it('handles manual replies (no return', () => {
+		return test(url, '/noreturn', 'manual return')
 	})
 	it('supports custom keyboards', () => {
 		var opts = {
