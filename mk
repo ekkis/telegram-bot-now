@@ -402,7 +402,7 @@ mkenv() {
 	help
 }
 [ "$1" == "-d" ] && {
-	shift; DEBUG=--debug; set -x
+	shift; NOWDEBUG=--debug; set -x
 }
 [ ! -f .env ] && mkenv
 eval `env`
@@ -418,7 +418,7 @@ eval `env`
 
 [ -f .url ] && url=$(cat .url)
 [ ! -z "$url" ] && now rm --yes $url
-now $DEBUG $1 > .url
+now $NOWDEBUG $1 > .url
 [ $? == 0 ] && {
 	echo -e "\nBinding deployment to Telegram webhook..."
 	bind
