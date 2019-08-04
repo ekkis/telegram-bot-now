@@ -18,7 +18,7 @@ var xf = {
 
 var self = module.exports = {
     opts: { fetch },
-    parse: async (s, desc) => {
+    parse: async (s, desc = {}) => {
         var m = s;
         if (typeof s == 'object') s = s.args;
         if (desc.clean) {
@@ -33,7 +33,8 @@ var self = module.exports = {
 
         var ret = {};
         var r = desc.split ? s.split(desc.split) : [s];
-        if (!Array.isArray(desc.fields)) desc.fields = [desc.fields];
+        if (!desc.fields) desc.fields = [];
+        else if (!Array.isArray(desc.fields)) desc.fields = [desc.fields];
         for (var i = 0; i < desc.fields.length; i++) {
             let f = desc.fields[i];
             if (!r[i] && f.optional) continue;
@@ -80,6 +81,8 @@ var self = module.exports = {
             step = steps[state.next];
             opts = {fields: step, throwPrefix: state.route}.assign(opts);
             val = await self.parse(msg, opts);
+            // TODO: if parse() returns an array, the step below
+            // needs to figure out the names of the steps
             state.rsp.push({nm: step.nm, val});
     
             if (step.post) {
@@ -104,7 +107,8 @@ var self = module.exports = {
                 state.next = steps.indexOfObj(o => o.nm == step.next);
         }
         step = steps[state.next];
-        if (step.skip && step.skip(state.rsp.last().val)) step = steps[++state.next];
+        if (step.skip && step.skip(state.rsp.last().val)) 
+            step = steps[++state.next];  // TODO: should be amneded to be val.length
 
         // the last step in the dialogue has been reached
         // so we clear state as an indication to caller
