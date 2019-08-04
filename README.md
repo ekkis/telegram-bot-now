@@ -67,20 +67,26 @@ ln -s node_modules/telegram-bot-now/mk
 ## Deploy
 
 Before you can deploy your project you'll need an account on the Now network -- see the
-link on the preface to this document for creating one.
+link on the preface to this document for creating one
 
-Now account in hand, to deploy your project is super easy.  Run:
+To bind your project implementation to the bot you created, you'll need to supply
+the bot key that BotFather generated.  Running the command below will prompt you
+to verify the Now account you created and will also ask for the bot key:
+```bash
+$ ./mk secrets
+```
+The above will store your bot key in your environment file (`.env`), which is located
+on your project root.  Any sensitive information your project needs to store, such as
+keys or credentials to external systems, should be managed as Now secrets and can be 
+placed in the environment file.  *Just remember that if you change the contents of this
+file you'll need to run the above command again*
+
+Now, to deploy your project is super easy.  Run:
 ```bash
 $ ./mk
 ```
 ...which will synchronise the local files in your project with the Now servers
 and automatically bind the deployment to your Telegram bot's *webhook*
-
-*Your first deployment, however*, won't have the information it needs to make
-the binding, namely the Bot key that Bot Father supplied you.  You can provide
-provide this key to the mk command (with the `--bot-key` argument) but if you 
-don't, it will prompt you for it. The information will be saved to your
-environment file (`.env`)
 
 To see logs on your deployment:
 ```bash
@@ -116,15 +122,6 @@ Your environment file is also compatible with the Microsoft VS Code debugger.  J
 your `.vscode/launch.json` file contains the following line (as previously shown):
 ```json
     "envFile": "${workspaceFolder}/.env"
-```
-
-## Notes
-
-Your project will likely need to store credentials and other sensitive information needed
-to access external systems.  If that is the case, you can store this information in your
-environment file and deploy it to the Now network with the command below:
-```bash
-$ ./mk secrets
 ```
 
 ## Additional Reading
