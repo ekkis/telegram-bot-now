@@ -98,8 +98,11 @@ var self = module.exports = {
                     if (opts) step.next = opts.step;
                 }
             }
-            if (typeof step.next == 'function')
-                step.next = step.next(val, state) || 1;
+            if (typeof step.next == 'function') {
+                let next = step.next(val, state);
+                if (typeof next == 'undefined') next = 1;
+                step.next = next;
+            }
             if (typeof step.next == 'undefined')
                 state.next++;
             else if (step.next.isNbr) state.next += step.next;

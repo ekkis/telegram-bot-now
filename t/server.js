@@ -91,6 +91,21 @@ var routes = {
 		];
 		return bot.utils.dialogue(m, steps, meta, {MSG: routes.MSG.SKIPPED})
 	},
+	loop: async (m, meta) => {
+		var prompts = 'abc'.split('')
+		meta.dialogue.setpath('i', 0, true);
+		var steps = [
+			{nm: 'amts', next: (v, r) => {
+				return (++meta.dialogue.i == prompts.length) ? 1 : 0
+			}},
+			{nm: 'thanks', post: (v, r) => {
+				var result = r[3].val + ': ' + r[0].val + r[1].val + r[2].val
+				return {result};
+			}},
+			{nm: 'final'}
+		];
+		return bot.utils.dialogue(m, steps, meta, {MSG: routes.MSG.LOOP})
+	},
 	MSG: {
 		CHAT: {
 			INITIAL: 'Greetings. What\'s your name?',
@@ -108,6 +123,11 @@ var routes = {
 		SKIPPED: {
 			INITIAL: 'Greetings. What\'s your name?',
 			FINAL: 'Good bye'
+		},
+		LOOP: {
+			AMTS: 'Enter value for %{amts}',
+			THANKS: 'Thanks.  Enter a name now',
+			FINAL: 'Your response was %{result}'
 		}
 	}
 }
@@ -397,6 +417,16 @@ describe('Server routes', () => {
 		it('interim step', () => {
 			var name = 'ziggy';
 			return test(url, name, routes.MSG.CHAT.FINAL)
+		})
+	})
+	describe('Dialogue loops', () => {
+		var msg = routes.MSG.LOOP;
+		it('start', () => test(url, '/loop', msg.AMTS))
+		it('first response', () => test(url, 'A', msg.AMTS))
+		it('second response', () => test(url, 'B', msg.AMTS))
+		it('third response', () => test(url, 'C', msg.THANKS))
+		it('thanks', () => {
+			return test(url, 'TEST', msg.FINAL.sprintf({result: 'TEST: ABC'}))
 		})
 	})
 })
