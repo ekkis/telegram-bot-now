@@ -127,6 +127,7 @@ var self = module.exports = {
         if (!ret) die('No message for step [' + step.nm + ']');
         if (ret.isStr) ret = {text: ret};
         ret.vars = val.isObj ? val : (state.rsp.last() || {});
+        if (step.options) ret.options = step.options;
         if (val.options) ret.options = val.options;
         if (!Array.isArray(ret)) ret = [ret];
         return ret;

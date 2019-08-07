@@ -106,6 +106,13 @@ var routes = {
 		];
 		return bot.utils.dialogue(m, steps, meta, {MSG: routes.MSG.LOOP})
 	},
+    firstkbd: async (m, meta) => {
+        var steps = [
+            {nm: 'first', options: [['test A', 'test B']]},
+            {nm: 'final'}
+        ]
+        return bot.utils.dialogue(m, steps, meta, {MSG: routes.MSG.FIRSTKBD})
+    },		
 	MSG: {
 		CHAT: {
 			INITIAL: 'Greetings. What\'s your name?',
@@ -128,7 +135,11 @@ var routes = {
 			AMTS: 'Enter value for %{amts}',
 			THANKS: 'Thanks.  Enter a name now',
 			FINAL: 'Your response was %{result}'
-		}
+		},
+		FIRSTKBD: {
+            FIRST: 'Choose one',
+            FINAL: 'Cool'
+        }
 	}
 }
 
@@ -188,7 +199,7 @@ function test(uri, cmd, res, exp) {
 		expected.cmd = msg.cmd;
 		expected.args = msg.args;
 		expected.text = Array.isArray(res) ? res[i++] : res
-		delete msg.vars;
+		msg.rm('vars')
 		ret = Object.assign({}, msg)
 
 		msg.ok = true
@@ -429,4 +440,19 @@ describe('Server routes', () => {
 			return test(url, 'TEST', msg.FINAL.sprintf({result: 'TEST: ABC'}))
 		})
 	})
+    describe('Dialogue start keyboard', () => {
+        var msg = routes.MSG.FIRSTKBD;
+		var keyboard = [['test A', 'test B']]
+		var opts = {
+			options: keyboard,
+			reply_markup: {
+				keyboard,
+				one_time_keyboard: true,
+				resize_keyboard: true,
+				selective: false
+			}
+		}
+        it('start', () => test(url, '/firstkbd', msg.FIRST, opts))
+        it('final', () => test(url, 'test A', msg.FINAL))
+    })
 })
