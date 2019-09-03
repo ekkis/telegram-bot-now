@@ -102,8 +102,8 @@ function server(routes, opts) {
 			ret = await m.reply()
 		} catch(err) {
 			utils.err(err);
-			if (err instanceof Error) err = err.obj();
 			ret = [err];
+			if (err instanceof Error) ret[0] = err.obj();
 	
 			// if a message could be produced, notify the user/group
 			if (!m) return;
