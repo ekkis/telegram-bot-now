@@ -9,10 +9,11 @@ var self = module.exports = {
 	info: { 
 		version: pkg.version, 
 		async get(req) {
+			var proto = 'http';
 			var {host} = req.headers.def({host: ''});
 			var {bot, script, net} = utils.urlargs(req.url).def({net: 'main'});
-			var proto = 'http';
 			if (host.indexOf('localhost') == -1) proto += 's';
+			else net = 'local';
 			var url = proto + '://' + host + script;
 			return this.assign(
 				await utils.info(bot), {host, url, net}
@@ -77,6 +78,7 @@ function server(routes, opts) {
 				let [cmd, args] = m.args.splitn('\\s');
 				m.cmd = cmd.replace('/', '').lc();
 				m.args = args || '';
+				m.meta.dialogue = {};
 			}
 	
 			// the route is specified in the request but overridden
@@ -100,7 +102,8 @@ function server(routes, opts) {
 			ret = await m.reply()
 		} catch(err) {
 			utils.err(err);
-			ret = [err.obj()];
+			if (err instanceof Error) err = err.obj();
+			ret = [err];
 	
 			// if a message could be produced, notify the user/group
 			if (!m) return;
